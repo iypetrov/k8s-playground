@@ -2,23 +2,23 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: nginx-better
+  name: foo-better
   namespace: services-explore
   labels:
-    app: nginx-better
+    app: foo-better
 spec:
   replicas: 3
   selector:
     matchLabels:
-      app: nginx-better
+      app: foo-better
   template:
     metadata:
       labels:
-        app: nginx-better
+        app: foo-better
     spec:
       containers:
-        - name: nginx
-          image: cgr.dev/chainguard/nginx:latest
+        - name: foo 
+          image: iypetrov/debug-display-envs:1.0.0
           ports:
             - containerPort: 8080
               protocol: TCP
@@ -44,19 +44,10 @@ spec:
           securityContext:
             allowPrivilegeEscalation: false
             privileged: false
-          volumeMounts:
-            - name: nginx-config
-              mountPath: /etc/nginx/nginx.conf
-              subPath: default.conf.template
-              readOnly: true
       securityContext:
         seccompProfile:
           type: RuntimeDefault
         runAsUser: 1001
         runAsGroup: 1001
         runAsNonRoot: true
-      volumes:
-        - name: nginx-config
-          configMap:
-            name: nginx-template
 
