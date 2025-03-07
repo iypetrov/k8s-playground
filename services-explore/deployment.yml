@@ -44,10 +44,19 @@ spec:
           securityContext:
             allowPrivilegeEscalation: false
             privileged: false
+          volumeMounts:
+            - name: nginx-config
+              mountPath: /etc/nginx/nginx.conf
+              subPath: default.conf.template
+              readOnly: true
       securityContext:
         seccompProfile:
           type: RuntimeDefault
         runAsUser: 1001
         runAsGroup: 1001
         runAsNonRoot: true
+      volumes:
+        - name: nginx-config
+          configMap:
+            name: nginx-template
 
