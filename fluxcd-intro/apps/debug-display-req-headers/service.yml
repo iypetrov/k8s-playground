@@ -1,0 +1,14 @@
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: debug-display-req-headers-svc
+  namespace: debug-display-req-headers
+spec:
+  type: ClusterIP
+  selector:
+    app: debug-display-req-headers
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 8080

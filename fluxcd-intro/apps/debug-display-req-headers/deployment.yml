@@ -1,0 +1,24 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: debug-display-req-headers
+  namespace: debug-display-req-headers
+  labels:
+    app: debug-display-req-headers
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: debug-display-req-headers
+  template:
+    metadata:
+      labels:
+        app: debug-display-req-headers
+    spec:
+      containers:
+        - name: debug-display-envs
+          image: iypetrov/debug-display-req-headers:1.2.0
+          ports:
+            - containerPort: 8080
+              protocol: TCP
