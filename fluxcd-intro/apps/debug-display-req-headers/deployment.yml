@@ -3,11 +3,11 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: debug-display-req-headers
-  namespace: debug-display-req-headers
+  namespace: ip812
   labels:
     app: debug-display-req-headers
 spec:
-  replicas: 3
+  replicas: 5
   selector:
     matchLabels:
       app: debug-display-req-headers

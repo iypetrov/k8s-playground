@@ -3,7 +3,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: cloudflared
-  namespace: cloudflare
+  namespace: ip812
 spec:
   replicas: 1
   selector:

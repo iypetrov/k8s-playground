@@ -3,7 +3,7 @@ apiVersion: secrets.hashicorp.com/v1beta1
 kind: HCPAuth
 metadata:
   name: vault-auth
-  namespace: vault
+  namespace: ip812
 spec:
   organizationID: "82cb4a03-1a1e-4302-b760-d92238215d36"
   projectID: "1502f049-4587-4e2b-b4c1-cf0fb7a27943"
