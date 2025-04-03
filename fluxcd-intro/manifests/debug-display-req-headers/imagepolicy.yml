@@ -9,4 +9,4 @@ spec:
     name: debug-display-req-headers-img-repo
   policy:
     semver:
-      range: ">=1.0.0"
+      range: ">=0.0.0"

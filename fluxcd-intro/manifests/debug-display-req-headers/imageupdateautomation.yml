@@ -1,5 +1,5 @@
 ---
-apiVersion: image.toolkit.fluxcd.io/v1beta1
+apiVersion: image.toolkit.fluxcd.io/v1beta2
 kind: ImageUpdateAutomation
 metadata:
   name: debug-display-req-headers-img-update-automation
@@ -15,11 +15,10 @@ spec:
         branch: main
     commit:
       author:
-        email: fluxcdbot@users.noreply.github.com
-        name: fluxcdbot
-      messageTemplate: "{{range .Updated.Images}}{{println .}}{{end}}"
+        email: flux.bot@gmail.com
+        name: flux.bot
+      messageTemplate: "Update {{range .Updated.Images}}{{println .}}{{end}}"
     push:
       branch: main
   update:
-    path: ./
     strategy: Setters

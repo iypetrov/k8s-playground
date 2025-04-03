@@ -1,7 +1,6 @@
 ---
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
-namespace: ip812
 resources:
   - deployment.yml
   - service.yml
@@ -9,3 +8,4 @@ resources:
   - imagerepository.yml
   - imagepolicy.yml
   - imageupdateautomation.yml
+  - slack.yml
