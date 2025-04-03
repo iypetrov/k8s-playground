@@ -1,0 +1,9 @@
+---
+apiVersion: image.toolkit.fluxcd.io/v1beta2
+kind: ImagePolicy
+metadata:
+  name: debug-display-req-headers-img-policy
+  namespace: flux-system
+spec:
+  imageRepositoryRef:
+    name: debug-display-req-headers-img-repo

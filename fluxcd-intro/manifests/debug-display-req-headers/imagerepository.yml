@@ -1,0 +1,9 @@
+---
+apiVersion: image.toolkit.fluxcd.io/v1beta2
+kind: ImageRepository
+metadata:
+  name: debug-display-req-headers-img-repo
+  namespace: flux-system
+spec:
+  image: iypetrov/debug-display-req-headers
+  interval: 1m

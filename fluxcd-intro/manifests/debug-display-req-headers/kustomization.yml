@@ -6,3 +6,6 @@ resources:
   - deployment.yml
   - service.yml
   - ingress-route.yml
+  - imagerepository.yml
+  - imagepolicy.yml
+  - imageupdateautomation.yml
