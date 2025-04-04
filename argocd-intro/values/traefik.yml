@@ -1,0 +1,35 @@
+---
+additionalArguments:
+  - "--api.insecure=true"
+  - "--providers.kubernetescrd"
+  - "--providers.kubernetesingress"
+ports:
+  web:
+    port: 80
+    exposedPort: 80
+    protocol: TCP
+ingressRoute:
+  dashboard:
+    enabled: true
+service:
+  enabled: true
+  type: LoadBalancer
+experimental:
+  plugins:
+    cloudflarewarp:
+      moduleName: "github.com/BetterCorp/cloudflarewarp"
+      version: "v1.3.0"
+log:
+  level: INFO
+http:
+  routers:
+    traefik:
+      entryPoints:
+        - web
+  middlewares:
+    cloudflarewarp:
+      plugin:
+        cloudflarewarp:
+          disableDefault: false
+          trustip:
+            - "2400:cb00::/32"
