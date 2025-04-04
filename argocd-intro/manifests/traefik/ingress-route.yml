@@ -2,7 +2,7 @@
 apiVersion: traefik.io/v1alpha1
 kind: IngressRoute
 metadata:
-  name: traefik-dashboard-ip812
+  name: traefik-ing-route
   namespace: ip812
 spec:
   entryPoints:

@@ -2,14 +2,14 @@
 apiVersion: traefik.io/v1alpha1
 kind: IngressRoute
 metadata:
-  name: web-ing-route
-  namespace: ip812
+  name: argocd-ing-route
+  namespace: argocd
 spec:
   entryPoints:
     - web
   routes:
-    - match: Host(`template.ip812.com`)
+    - match: Host(`argocd.ip812.com`)
       kind: Rule
       services:
-        - name: web-svc
+        - name: argocd-server
           port: 80
