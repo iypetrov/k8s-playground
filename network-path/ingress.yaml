@@ -5,6 +5,7 @@ metadata:
   name: foo-ingress
   namespace: foo
 spec:
+  ingressClassName: nginx
   rules:
     - http:
         paths:
