@@ -3,14 +3,12 @@ apiVersion: v1
 kind: Service
 metadata:
   name: foo-service
-  namespace: services-explore
+  namespace: foo
 spec:
-  type: NodePort
+  type: ClusterIP
   selector:
-    app: foo-better
+    app: foo
   ports:
     - protocol: TCP
       port: 8080
       targetPort: 8080
-      nodePort: 30080
-
