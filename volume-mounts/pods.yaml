@@ -1,0 +1,49 @@
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: app
+  labels:
+    run: app
+spec:
+  containers:
+  - image: busybox
+    name: app
+    command: ['sh', '-c', 'sleep 3600']
+    env:
+      - name: FOO
+        valueFrom:
+          configMapKeyRef:
+            name: app-cm
+            key: foo
+      - name: BUZZ
+        valueFrom:
+          secretKeyRef:
+            name: app-secret
+            key: buzz
+    envFrom:
+      - configMapRef:
+          name: app-cm
+      - secretRef:
+          name: app-secret
+    volumeMounts:
+      - name: cache-vol
+        mountPath: /cache
+      - name: host-logs 
+        mountPath: /logs
+      - name: config-vol
+        mountPath: /etc/config
+      - name: secret-vol
+        mountPath: /etc/secret
+  volumes:
+    - name: cache-vol
+      emptyDir: {}
+    - name: host-logs
+      hostPath:
+        path: /Users/ipetrov/logs
+    - name: config-vol
+      configMap:
+        name: app-cm
+    - name: secret-vol
+      secret:
+        secretName: app-secret
