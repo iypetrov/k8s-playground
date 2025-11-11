@@ -1,0 +1,38 @@
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: netpol-2
+spec:
+  podSelector:
+    matchLabels:
+      run: app2
+  policyTypes:
+  - Ingress
+  ingress:
+  - from:
+    - podSelector:
+        matchLabels:
+          run: err
+      namespaceSelector:
+        matchLabels:
+          kubernetes.io/metadata.name: default
+    ports:
+    - protocol: TCP
+      port: 80
+  - from:
+    - podSelector:
+        matchLabels:
+          run: bar
+    - namespaceSelector:
+        matchLabels:
+          kubernetes.io/metadata.name: monitoring
+    ports:
+    - protocol: TCP
+      port: 80
+  - from:
+    ports:
+    - protocol: TCP
+      port: 53
+    - protocol: UDP
+      port: 53
