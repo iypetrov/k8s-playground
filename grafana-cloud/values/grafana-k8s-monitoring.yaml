@@ -1,0 +1,108 @@
+cluster:
+  name: ip812-prod
+global:
+  scrapeInterval: "60s"
+destinations:
+  - name: grafana-cloud-metrics
+    type: prometheus
+    url: https://prometheus-prod-24-prod-eu-west-2.grafana.net/api/prom/push
+    auth:
+      type: basic
+      usernameKey: GF_CLOUD_PROMETHEUS_USER_ID
+      passwordKey: GF_CLOUD_ACCESS_POLICY_TOKEN
+    secret:
+      create: false
+      name: grafana-k8s-monitoring-secret
+
+  - name: grafana-cloud-logs
+    type: loki
+    url: https://logs-prod-012.grafana.net/loki/api/v1/push
+    auth:
+      type: basic
+      usernameKey: GF_CLOUD_LOGS_USER_ID
+      passwordKey: GF_CLOUD_ACCESS_POLICY_TOKEN
+    secret:
+      create: false
+      name: grafana-k8s-monitoring-secret
+clusterMetrics:
+  enabled: true
+clusterEvents:
+  enabled: false
+podLogs:
+  enabled: true
+applicationObservability:
+  enabled: false
+alloy-metrics:
+  enabled: true
+  alloy:
+    clustering:
+      enabled: false
+    extraEnv:
+      - name: GCLOUD_RW_API_KEY
+        valueFrom:
+          secretKeyRef:
+            name: grafana-k8s-monitoring-secret
+            key: GF_CLOUD_ACCESS_POLICY_TOKEN
+      - name: CLUSTER_NAME
+        value: ip812-prod
+      - name: NAMESPACE
+        valueFrom:
+          fieldRef:
+            fieldPath: metadata.namespace
+      - name: POD_NAME
+        valueFrom:
+          fieldRef:
+            fieldPath: metadata.name
+      - name: GCLOUD_FM_COLLECTOR_ID
+        value: grafana-k8s-monitoring-\$(CLUSTER_NAME)-\$(NAMESPACE)-\$(POD_NAME)
+  remoteConfig:
+    enabled: true
+    url: https://fleet-management-prod-011.grafana.net
+    auth:
+      type: basic
+      usernameKey: GF_CLOUD_PROFILES_USER_ID
+      passwordKey: GF_CLOUD_ACCESS_POLICY_TOKEN
+    secret:
+      create: false
+      name: grafana-k8s-monitoring-secret
+alloy-logs:
+  enabled: true
+  alloy:
+    clustering:
+      enabled: false
+    extraEnv:
+      - name: GCLOUD_RW_API_KEY
+        valueFrom:
+          secretKeyRef:
+            name: grafana-k8s-monitoring-secret
+            key: GF_CLOUD_ACCESS_POLICY_TOKEN
+      - name: CLUSTER_NAME
+        value: ip812-prod
+      - name: NAMESPACE
+        valueFrom:
+          fieldRef:
+            fieldPath: metadata.namespace
+      - name: POD_NAME
+        valueFrom:
+          fieldRef:
+            fieldPath: metadata.name
+      - name: NODE_NAME
+        valueFrom:
+          fieldRef:
+            fieldPath: spec.nodeName
+      - name: GCLOUD_FM_COLLECTOR_ID
+        value: grafana-k8s-monitoring-\$(CLUSTER_NAME)-\$(NAMESPACE)-alloy-logs-\$(NODE_NAME)
+  remoteConfig:
+    enabled: true
+    url: https://fleet-management-prod-011.grafana.net
+    auth:
+      type: basic
+      usernameKey: GF_CLOUD_PROFILES_USER_ID
+      passwordKey: GF_CLOUD_ACCESS_POLICY_TOKEN
+    secret:
+      create: false
+      name: grafana-k8s-monitoring-secret
+alloy-singleton:
+  enabled: false
+alloy-receiver:
+  enabled: false

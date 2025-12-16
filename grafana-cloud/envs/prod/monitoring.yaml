@@ -1,0 +1,17 @@
+---
+apiVersion: kustomize.toolkit.fluxcd.io/v1
+kind: Kustomization
+metadata:
+  name: monitoring
+  namespace: flux-system
+spec:
+  interval: 60s
+  sourceRef:
+    kind: GitRepository
+    name: flux-system
+  path: ./envs/prod/monitoring
+  prune: true
+  wait: true
+  dependsOn:
+    - name: doppler
+      namespace: flux-system
