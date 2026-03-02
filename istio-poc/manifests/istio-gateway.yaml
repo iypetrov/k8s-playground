@@ -1,0 +1,61 @@
+---
+apiVersion: networking.istio.io/v1beta1
+kind: Gateway
+metadata:
+  name: app-gateway
+  namespace: istio-ingress
+spec:
+  selector:
+    istio: ingress
+  servers:
+    - hosts:
+        - "app.ip812.click"
+      tls:
+        mode: SIMPLE
+        credentialName: app-ip812-click-tls
+      port:
+        number: 443
+        name: https
+        protocol: HTTPS
+---
+apiVersion: networking.istio.io/v1beta1
+kind: VirtualService
+metadata:
+  name: nginx-route
+  namespace: poc
+spec:
+  hosts:
+    - "app.ip812.click"
+  gateways:
+    - istio-ingress/app-gateway
+  http:
+    - match:
+        - uri:
+            prefix: /red
+      rewrite:
+        uri: /
+      route:
+        - destination:
+            host: red.poc.svc.cluster.local
+            port:
+              number: 80
+    - match:
+        - uri:
+            prefix: /green
+      rewrite:
+        uri: /
+      route:
+        - destination:
+            host: green.poc.svc.cluster.local
+            port:
+              number: 80
+    - match:
+        - uri:
+            prefix: /blue
+      rewrite:
+        uri: /
+      route:
+        - destination:
+            host: blue.poc.svc.cluster.local
+            port:
+              number: 80

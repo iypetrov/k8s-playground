@@ -1,0 +1,28 @@
+---
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: app-ip812-click
+  namespace: istio-ingress
+spec:
+  secretName: app-ip812-click-tls
+  duration: 2160h # 90d
+  renewBefore: 360h # 15d
+  subject:
+    organizations:
+      - ip812-click
+  isCA: false
+  privateKey:
+    algorithm: RSA
+    encoding: PKCS1
+    size: 2048
+    rotationPolicy: Always
+  usages:
+    - server auth
+    - client auth
+  dnsNames:
+    - app.ip812.click
+  issuerRef:
+    name: letsencrypt-prod
+    kind: ClusterIssuer
+    group: cert-manager.io

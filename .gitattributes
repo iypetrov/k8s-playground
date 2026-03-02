@@ -1,0 +1,11 @@
+* text=auto
+.editorconfig text
+*.tf          text eol=lf
+*.tfvars      text eol=lf
+*.tftpl       text eol=lf
+*.hcl         text eol=lf
+*.pem         binary
+*.yml         text
+*.yaml        text
+*.yml         linguist-detectable=true
+*.yaml        linguist-detectable=true

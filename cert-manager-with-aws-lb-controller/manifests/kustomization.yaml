@@ -1,0 +1,6 @@
+resources:
+- clusterissuers.yaml
+- certificates.yaml
+- configmaps.yaml
+- deployments.yaml
+- services.yaml

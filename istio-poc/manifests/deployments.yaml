@@ -1,0 +1,132 @@
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: red-html
+  namespace: poc
+data:
+  index.html: |
+    <!DOCTYPE html>
+    <html>
+      <body style="background-color:#fc0f03;display:flex;justify-content:center;align-items:center;height:100vh;margin:0;">
+        <h1 style="color:white;font-family:sans-serif;font-size:4rem;">Red</h1>
+      </body>
+    </html>
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: red
+  namespace: poc
+  labels:
+    app: red
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: red
+  template:
+    metadata:
+      labels:
+        app: red
+    spec:
+      containers:
+      - image: nginx:alpine
+        name: red
+        ports:
+        - containerPort: 80
+        volumeMounts:
+        - name: html
+          mountPath: /usr/share/nginx/html
+      volumes:
+      - name: html
+        configMap:
+          name: red-html
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: green-html
+  namespace: poc
+data:
+  index.html: |
+    <!DOCTYPE html>
+    <html>
+      <body style="background-color:#03fc0f;display:flex;justify-content:center;align-items:center;height:100vh;margin:0;">
+        <h1 style="color:white;font-family:sans-serif;font-size:4rem;">Green</h1>
+      </body>
+    </html>
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: green
+  namespace: poc
+  labels:
+    app: green
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: green
+  template:
+    metadata:
+      labels:
+        app: green
+    spec:
+      containers:
+      - image: nginx:alpine
+        name: green
+        ports:
+        - containerPort: 80
+        volumeMounts:
+        - name: html
+          mountPath: /usr/share/nginx/html
+      volumes:
+      - name: html
+        configMap:
+          name: green-html
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: blue-html
+  namespace: poc
+data:
+  index.html: |
+    <!DOCTYPE html>
+    <html>
+      <body style="background-color:#0b03fc;display:flex;justify-content:center;align-items:center;height:100vh;margin:0;">
+        <h1 style="color:white;font-family:sans-serif;font-size:4rem;">Blue</h1>
+      </body>
+    </html>
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: blue
+  namespace: poc
+  labels:
+    app: blue
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: blue
+  template:
+    metadata:
+      labels:
+        app: blue
+    spec:
+      containers:
+      - image: nginx:alpine
+        name: blue
+        ports:
+        - containerPort: 80
+        volumeMounts:
+        - name: html
+          mountPath: /usr/share/nginx/html
+      volumes:
+      - name: html
+        configMap:
+          name: blue-html
