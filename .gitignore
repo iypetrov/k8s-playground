@@ -33,6 +33,7 @@ build/
 
 # IDEs and editors
 .idea/
+bin/
 .project
 .classpath
 .c9/
