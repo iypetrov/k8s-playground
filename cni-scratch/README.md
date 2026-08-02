@@ -14,10 +14,21 @@ These are the steps to create a custom CNI:
 ```bash
 # foo.sh
 
-export -p
+#!/usr/bin/env bash
 
-# $ make docker-build docker-run
+env | grep '^CNI_' >> /var/log/foo-cni.log 2>&1
+echo >> /var/log/foo-cni.log 2>&1
 
+# Report a minimal valid result back to the CRI.
+echo '{"cniVersion":"1.0.0"}'
+
+# $ make kind-up cni-up test-pod plugin-logs
+# # CNI_CONTAINERID=500f63fd2fb7138d6e6091d045acba028ef09a69544cf20a57651f0463e0676d
+# # CNI_IFNAME=eth0
+# # CNI_NETNS=/var/run/netns/cni-b614900b-6959-f366-3ca9-9925f755c389
+# # CNI_COMMAND=ADD
+# # CNI_PATH=/opt/cni/bin
+# # CNI_ARGS=IgnoreUnknown=1;K8S_POD_NAMESPACE=default;K8S_POD_NAME=cni-test;K8S_POD_INFRA_CONTAINER_ID=500f63fd2fb7138d6e6091d045acba028ef09a69544cf20a57651f0463e0676d;K8S_POD_UID=1392598f-ac25-4f85-8778-0307f317028f
 ```
 
 

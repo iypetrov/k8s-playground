@@ -16,9 +16,13 @@ cni-up:
 	kubectl apply -f cni-daemonset.yaml
 	kubectl rollout status daemonset/foo-cni -n kube-system --timeout=90s
 
-.PHONY: cni-logs
-cni-logs:
-	docker exec -it ${CLUSTER_NAME}-control-plane sh -c 'crictl logs $$(crictl ps -a --name foo-cni -q | head -1)'
+.PHONY: test-pod
+test-pod:
+	kubectl run cni-test --image=alpine --restart=Never --command -- sleep 3600
+
+.PHONY: plugin-logs
+plugin-logs:
+	docker exec ${CLUSTER_NAME}-control-plane sh -c 'for i in $$(seq 1 30); do [ -f /var/log/foo-cni.log ] && break; sleep 1; done; cat /var/log/foo-cni.log'
 
 .PHONY: kind-down
 kind-down:
