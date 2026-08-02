@@ -1,0 +1,9 @@
+FROM alpine:3
+
+COPY 10-foo.conf /cni/10-foo.conf
+COPY foo.sh /cni/foo
+COPY entrypoint.sh /cni/entrypoint.sh
+RUN chmod +x /cni/foo
+RUN chmod +x /cni/entrypoint.sh
+
+ENTRYPOINT ["/cni/entrypoint.sh"]

@@ -1,0 +1,42 @@
+---
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: foo-cni
+  namespace: kube-system
+spec:
+  selector:
+    matchLabels:
+      app: foo-cni
+  template:
+    metadata:
+      labels:
+        app: foo-cni
+    spec:
+      # Running in hostNetwork avoids dependency on CNI (solve chicken-egg problem).
+      hostNetwork: true
+      tolerations:
+      # Ensure to schedule on nodes that are not ready (nodes without a CNI are not ready).
+      - key: node.kubernetes.io/not-ready
+        operator: Exists
+        effect: NoSchedule
+      # Ensure to schedule on control-plane nodes.
+      - key: node-role.kubernetes.io/control-plane
+        operator: Exists
+        effect: NoSchedule
+      containers:
+      - name: foo-cni
+        image: cni-scratch:foo
+        volumeMounts:
+        - name: netd
+          mountPath: /etc/cni/net.d
+        - name: cnibin
+          mountPath: /opt/cni/bin
+      # Use `hostPath` to get access to the node FS.
+      volumes:
+      - name: netd
+        hostPath:
+          path: /etc/cni/net.d
+      - name: cnibin
+        hostPath:
+          path: /opt/cni/bin
