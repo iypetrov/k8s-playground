@@ -21,12 +21,13 @@ MAC_NETNS_VETH=$(ip -netns $nsname link show ${CNI_IFNAME} | grep link | awk '{p
 IP_VETH_NETNS=10.244.0.20
 ip -n ${NETNS} addr add ${IP_VETH_NETNS}/32 dev ${VETH_NETNS}
 
-# assign IP to veth interface on the host
-IP_VETH_HOST=10.244.0.101
-ip addr add ${IP_VETH_HOST}/32 dev ${VETH_HOST}
-
 # rename veth interface inside the new network namespace
 ip -n ${NETNS} link set ${VETH_NETNS} name ${CNI_IFNAME}
+
+# assign IP to veth interface on the host
+# it acts as a default gateway within the container's network namespace
+IP_VETH_HOST=10.244.0.101
+ip addr add ${IP_VETH_HOST}/32 dev ${VETH_HOST}
 
 # ensure all interfaces are up
 ip link set ${VETH_HOST} up
@@ -39,7 +40,7 @@ ip -n ${NETNS} route add default via ${IP_VETH_HOST} dev ${CNI_IFNAME}
 # add route on the host to let it know how to reach the new network namespace
 ip route add ${IP_VETH_NETNS}/32 dev ${VETH_HOST} scope host
 
-# return a JSON via stdout
+# return a JSON with details about the configuration performed
 RETURN_TEMPLATE='
 {
   "cniVersion": "1.0.0",
