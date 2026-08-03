@@ -1,6 +1,36 @@
 # cni-sceatch
 
 ## Overview
+To enable networking, containers use a specialized virtual network interface called a **virtual ethernet (veth) device**. A veth pair consists of two connected interfaces:
+- One interface is placed inside the container's **network namespace**.
+- The other interface remains in the **host's network namespace**.
+This configuration creates a communication link between the container and the host. As a result, containers running on the same node can communicate with one another through the host's networking stack.
+
+The process of creating and configuring container networking is as follows:
+- The _kube-apiserver_ communicates with the appropriate _kubelet_ on the target node.
+- Rather than creating containers directly, the _kubelet_ delegates this responsibility to the Container Runtime Interface (CRI).
+- The CRI creates the container and sets up its network namespace.
+- After the network namespace has been created, the CRI invokes a **Container Network Interface (CNI)** plugin.
+- The **CNI plugin** is responsible for:
+    - Creating and configuring the virtual ethernet (veth) pair.
+    - Connecting the container to the node's network.
+	- Configuring the required routes and other networking settings.
+> Please note that CNIs typically do not handle traffic forwarding or load balancing. By default, _kube-proxy_ serves as the default network proxy in Kubernetes which utilizes technologies like iptables or IPVS to direct incoming network traffic to the relevant Pods within the cluster. However, Cilium offers a superior alternative by loading eBPF programs directly into the kernel, achieving the same tasks with significantly higher speed. For more information on this topic see "[What is Kube-Proxy and why move from iptables to eBPF?](https://isovalent.com/blog/post/why-replace-iptables-with-ebpf/)".
+
+
+## Getting Started Locally
+
+### Start a KinD cluster locally with our CNI plugin + start a test Pod/Service
+```bash
+make kind-up cni-up test-pod plugin-logs
+```
+
+### Teardown the test cluster
+```bash
+make kind-down
+```
+
+## Implementation
 These are the steps to create a custom CNI:
 - After the CRI creates the network namespace, it loads the first configuration file found in `/etc/cni/net.d/`. We'll create `/etc/cni/net.d/10-foo.conf`, which contains a JSON configuration that follows the CNI specification. The field `"type": "foo"` tells the CRI to execute a CNI plugin named **foo** in the next step.
     ```json
@@ -88,7 +118,7 @@ These are the steps to create a custom CNI:
     MAC_HOST_VETH=$(ip link show ${VETH_HOST} | grep link | awk '{print$2}')
     MAC_NETNS_VETH=$(ip -netns $nsname link show ${CNI_IFNAME} | grep link | awk '{print$2}')
     
-    RETURN=$(printf "${RETURN_TEMPLATE}" "${VETH_HOST}" "${MAC_HOST_VETH}" "${CNI_IFNAME}" "${mac_netns_veth}" "${CNI_NETNS}" "${CIDR_VETH_NETNS}")
+    RETURN=$(printf "${RETURN_TEMPLATE}" "${VETH_HOST}" "${MAC_HOST_VETH}" "${CNI_IFNAME}" "${MAC_NETNS_VETH}" "${CNI_NETNS}" "${IP_VETH_NETNS}/32")
     echo ${RETURN}
     ```
 
