@@ -13,6 +13,10 @@ ip link add ${VETH_HOST} type veth peer name ${VETH_NETNS}
 NETNS=$(basename ${CNI_NETNS})
 ip link set ${VETH_NETNS} netns ${NETNS}
 
+# veth interfaces are automatically assigned MAC addresses, they lack an IP address
+MAC_HOST_VETH=$(ip link show ${VETH_HOST} | grep link | awk '{print$2}')
+MAC_NETNS_VETH=$(ip -netns $nsname link show ${CNI_IFNAME} | grep link | awk '{print$2}')
+
 # assign IP to veth interface inside the new network namespace
 IP_VETH_NETNS=10.244.0.20
 ip -n ${NETNS} addr add ${IP_VETH_NETNS}/32 dev ${VETH_NETNS}
@@ -57,9 +61,6 @@ RETURN_TEMPLATE='
     }
   ]
 }'
-
-MAC_HOST_VETH=$(ip link show ${VETH_HOST} | grep link | awk '{print$2}')
-MAC_NETNS_VETH=$(ip -netns $nsname link show ${CNI_IFNAME} | grep link | awk '{print$2}')
 
 RETURN=$(printf "${RETURN_TEMPLATE}" "${VETH_HOST}" "${MAC_HOST_VETH}" "${CNI_IFNAME}" "${MAC_NETNS_VETH}" "${CNI_NETNS}" "${IP_VETH_NETNS}/32")
 echo ${RETURN}

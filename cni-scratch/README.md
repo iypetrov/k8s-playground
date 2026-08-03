@@ -1,6 +1,7 @@
 # cni-sceatch
 
 ## Overview
+CNI specifies the relationship between a CRI, such as containerd, responsible for container and network interface creation, and a CNI is tasked with configuring network interfaces within the container upon execution.
 To enable networking, containers use a specialized virtual network interface called a **virtual ethernet (veth) device**. A veth pair consists of two connected interfaces:
 - One interface is placed inside the container's **network namespace**.
 - The other interface remains in the **host's network namespace**.
