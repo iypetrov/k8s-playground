@@ -23,7 +23,7 @@ The process of creating and configuring container networking is as follows:
 
 ### Start a KinD cluster locally with our CNI plugin + start a test Pod/Service
 ```bash
-make kind-up cni-up test-pod plugin-logs
+make kind-up cni-up app cni-logs
 ```
 
 ### Teardown the test cluster
@@ -122,6 +122,54 @@ These are the steps to create a custom CNI:
     RETURN=$(printf "${RETURN_TEMPLATE}" "${VETH_HOST}" "${MAC_HOST_VETH}" "${CNI_IFNAME}" "${MAC_NETNS_VETH}" "${CNI_NETNS}" "${IP_VETH_NETNS}/32")
     echo ${RETURN}
     ```
+
+To validate if you can access the Pod via its IP directly run:
+```bash
+make validate-pod-connectivity
+```
+
+### Support Services
+With the current implementation we can reach a Pod directly by its IP address, but we cannot reach it via a Kubernetes Service. When a Service is created, Kubernetes assigns it a virtual IP called a ClusterIP. This IP does not belong to any network interface or real host, it only exists as a concept in the control plane. Something must intercept traffic destined for the ClusterIP and redirect it to the actual Pod IP behind the Service. By default, _kube-proxy_ handles this using iptables rules installed on every node.
+This can be implemented using several techniques. One popular approach is to use eBPF, as Cilium does, replacing kube-proxy by implementing its functionality directly within the CNI without requiring an additional component. To achieve that we will attach to the `cgroup/connect4` hook (runs at the moment a process calls the `connect()` system call, before the packet is created at all), the [same hook Cilium uses by default for its kube-proxy replacement (KPR)](https://github.com/cilium/cilium/blob/1.18.10/bpf/bpf_sock.c#L414). Hooking at the socket level means we intercept the Service address before any routing or packet processing happens, and the rest of the kernel only ever sees the real Pod IP.
+For the ClusterIP we will use **10.96.0.100**. A minimal implementation looks like this:
+```c
+#include <linux/bpf.h>
+#include <bpf/bpf_helpers.h>
+#include <bpf/bpf_endian.h>
+
+// Tells the BPF loader which kernel hook to attach the program to.
+SEC("cgroup/connect4")
+int sock4_connect(struct bpf_sock_addr *ctx)
+{
+  // IP addresses are written as hexadecimal literals, because network protocols store addresses in big-endian format.
+  const __be32 cluster_ip = 0x0A600064; // 10.96.0.100
+  const __be32 pod_ip = 0x0AF40014;     // 10.244.0.20
+
+  // __bpf_htonl function converts values to big-endian at runtime, ensuring the comparison is correct regardless of the host architecture.
+  if (ctx->user_ip4 == __bpf_htonl(cluster_ip)) {
+      ctx->user_ip4 = __bpf_htonl(pod_ip);
+  }
+
+  return 1;
+}
+
+char LICENSE[] SEC("license") = "GPL";
+```
+
+To load & attach the eBPF code, run the follwoing command:
+```bash
+make bpf-prepare bpf-prepare-kpr
+```
+
+To remove the eBPF code run:
+```bash
+make bpf-clean-kpr
+```
+
+To validate if you can access the Pod via the Service run:
+```bash
+make validate-service-connectivity
+```
 
 ## References
 - https://github.com/f1ko/demystifying-cni/blob/main/README.md
