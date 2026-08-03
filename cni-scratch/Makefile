@@ -24,6 +24,10 @@ test-pod:
 plugin-logs:
 	docker exec ${CLUSTER_NAME}-control-plane sh -c 'for i in $$(seq 1 30); do [ -f /var/log/foo-cni.log ] && break; sleep 1; done; tail -f /var/log/foo-cni.log'
 
+.PHONY: validate-pod-connectivity
+validate-pod-connectivity:
+	docker exec ${CLUSTER_NAME}-control-plane curl -s 10.244.0.20:80
+
 .PHONY: kind-down
 kind-down:
 	kind delete cluster --name ${CLUSTER_NAME}
