@@ -128,9 +128,15 @@ To validate if you can access the Pod via its IP directly run:
 make validate-pod-connectivity
 ```
 
+### eBPF Hooks
+eBPF lets us load programs directly into the kernel to inspect and modify traffic. The hook we attach to determines where in the network stack we can intercept and modify traffic. There are several options, each with different trade-offs:
+- **XDP (eXpress Data Path)**: runs at the very earliest point where the network card driver receives a packet, before the kernel has even allocated a socket buffer for it. Extremely fast, but you only see raw packet bytes.
+- **tc (Traffic Control)**: runs in the kernel's traffic control layer, after the packet has been parsed. Useful for filtering and modifying traffic on a specific network interface.
+- **cgroup/connect**: runs at the moment a process calls the `connect()` system call, before the packet is created at all. You can inspect and rewrite the destination address right at the socket level.
+
 ### Support Services
 With the current implementation we can reach a Pod directly by its IP address, but we cannot reach it via a Kubernetes Service. When a Service is created, Kubernetes assigns it a virtual IP called a ClusterIP. This IP does not belong to any network interface or real host, it only exists as a concept in the control plane. Something must intercept traffic destined for the ClusterIP and redirect it to the actual Pod IP behind the Service. By default, _kube-proxy_ handles this using iptables rules installed on every node.
-This can be implemented using several techniques. One popular approach is to use eBPF, as Cilium does, replacing kube-proxy by implementing its functionality directly within the CNI without requiring an additional component. To achieve that we will attach to the `cgroup/connect4` hook (runs at the moment a process calls the `connect()` system call, before the packet is created at all), the [same hook Cilium uses by default for its kube-proxy replacement (KPR)](https://github.com/cilium/cilium/blob/1.18.10/bpf/bpf_sock.c#L414). Hooking at the socket level means we intercept the Service address before any routing or packet processing happens, and the rest of the kernel only ever sees the real Pod IP.
+This can be implemented using several techniques. One popular approach is to use eBPF, as Cilium does, replacing kube-proxy by implementing its functionality directly within the CNI without requiring an additional component. To achieve that we will attach to the `cgroup/connect4` hook, the [same hook Cilium uses by default for its kube-proxy replacement (KPR)](https://github.com/cilium/cilium/blob/1.18.10/bpf/bpf_sock.c#L414). Hooking at the socket level means we intercept the Service address before any routing or packet processing happens, and the rest of the kernel only ever sees the real Pod IP.
 For the ClusterIP we will use **10.96.0.100**. A minimal implementation looks like this:
 ```c
 #include <linux/bpf.h>
