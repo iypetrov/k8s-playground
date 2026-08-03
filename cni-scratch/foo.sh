@@ -61,5 +61,5 @@ RETURN_TEMPLATE='
 MAC_HOST_VETH=$(ip link show ${VETH_HOST} | grep link | awk '{print$2}')
 MAC_NETNS_VETH=$(ip -netns $nsname link show ${CNI_IFNAME} | grep link | awk '{print$2}')
 
-RETURN=$(printf "${RETURN_TEMPLATE}" "${VETH_HOST}" "${MAC_HOST_VETH}" "${CNI_IFNAME}" "${mac_netns_veth}" "${CNI_NETNS}" "${CIDR_VETH_NETNS}")
+RETURN=$(printf "${RETURN_TEMPLATE}" "${VETH_HOST}" "${MAC_HOST_VETH}" "${CNI_IFNAME}" "${MAC_NETNS_VETH}" "${CNI_NETNS}" "${IP_VETH_NETNS}/32")
 echo ${RETURN}
