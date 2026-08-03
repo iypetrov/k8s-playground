@@ -18,11 +18,11 @@ cni-up:
 
 .PHONY: test-pod
 test-pod:
-	kubectl run cni-test --image=alpine --restart=Never --command -- sleep 3600
+	kubectl run cni-test --image=httpd
 
 .PHONY: plugin-logs
 plugin-logs:
-	docker exec ${CLUSTER_NAME}-control-plane sh -c 'for i in $$(seq 1 30); do [ -f /var/log/foo-cni.log ] && break; sleep 1; done; cat /var/log/foo-cni.log'
+	docker exec ${CLUSTER_NAME}-control-plane sh -c 'for i in $$(seq 1 30); do [ -f /var/log/foo-cni.log ] && break; sleep 1; done; tail -f /var/log/foo-cni.log'
 
 .PHONY: kind-down
 kind-down:
