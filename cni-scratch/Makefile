@@ -51,6 +51,18 @@ bpf-clean-kpr:
 	docker exec ${CLUSTER_NAME}-control-plane bpftool cgroup detach /sys/fs/cgroup connect4 pinned /sys/fs/bpf/sock4_connect
 	docker exec ${CLUSTER_NAME}-control-plane rm /sys/fs/bpf/sock4_connect
 
+.PHONY: bpf-netpol
+bpf-netpol:
+	docker cp bpf_netpol.c ${CLUSTER_NAME}-control-plane:/root/bpf_netpol.c
+	docker exec ${CLUSTER_NAME}-control-plane clang -O2 -g -target bpf -Wall -c /root/bpf_netpol.c -o /root/bpf_netpol.o
+	docker exec ${CLUSTER_NAME}-control-plane tc qdisc add dev veth_host clsact || true
+	docker exec ${CLUSTER_NAME}-control-plane tc filter add dev veth_host egress bpf da obj /root/bpf_netpol.o sec tc
+
+.PHONY: bpf-clean-netpol
+bpf-clean-netpol:
+	docker exec ${CLUSTER_NAME}-control-plane tc filter del dev veth_host egress || true
+	docker exec ${CLUSTER_NAME}-control-plane tc qdisc del dev veth_host clsact || true
+
 .PHONY: validate-service-connectivity
 validate-service-connectivity:
 	docker exec ${CLUSTER_NAME}-control-plane curl -s 10.96.0.100

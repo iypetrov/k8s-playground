@@ -1,5 +1,4 @@
 # cni-sceatch
-
 ## Overview
 CNI specifies the relationship between a CRI, such as containerd, responsible for container and network interface creation, and a CNI is tasked with configuring network interfaces within the container upon execution.
 To enable networking, containers use a specialized virtual network interface called a **virtual ethernet (veth) device**. A veth pair consists of two connected interfaces:
@@ -21,12 +20,12 @@ The process of creating and configuring container networking is as follows:
 
 ## Getting Started Locally
 
-### Start a KinD cluster locally with our CNI plugin + start a test Pod/Service
+Start a KinD cluster locally with our CNI plugin + start a test Pod/Service:
 ```bash
 make kind-up cni-up app cni-logs
 ```
 
-### Teardown the test cluster
+Teardown the test cluster:
 ```bash
 make kind-down
 ```
@@ -162,7 +161,7 @@ int sock4_connect(struct bpf_sock_addr *ctx)
 char LICENSE[] SEC("license") = "GPL";
 ```
 
-To load & attach the eBPF code, run the follwoing command:
+To load & attach the eBPF code, run the following command:
 ```bash
 make bpf-prepare bpf-prepare-kpr
 ```
@@ -175,6 +174,76 @@ make bpf-clean-kpr
 To validate if you can access the Pod via the Service run:
 ```bash
 make validate-service-connectivity
+```
+
+### Support NetworkPolicies
+It is worth mentioning that in practice you should check whether your CNI supports NetworkPolicies, because that is not always the case. For example Flannel, a popular CNI, does not enforce them at all, so applying a NetworkPolicy on a Flannel cluster silently does nothing.
+A CNI that does support them generally follows this flow: watch NetworkPolicy resources, translate their selectors (pods, namespaces, labels) into the concrete Pod IPs they match, and then enforce the resulting allow/deny rules somewhere in the datapath. Cilium, for instance, does this with eBPF programs attached to the `tc` hooks of each Pod's veth, filtering traffic in both directions to match the policy's `spec.ingress` and `spec.egress`.
+For demonstration I will attach a small eBPF program to the `tc` hook of the Pod's veth that drops all ingress traffic to our hardcoded Pod IP.
+Note that I do not create an actual NetworkPolicy resource here and generate the eBPF rule from it. Doing that would mean building the whole control plane described above: an informer that watches NetworkPolicy objects, logic that resolves their label selectors into concrete Pod IPs, and a mechanism that keeps a BPF map in sync as pods come and go. That is exactly the machinery a real CNI implements, and it is out of scope for this demo.
+For completeness, such a NetworkPolicy would look like this:
+```yaml
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: deny-all-ingress
+spec:
+  podSelector:
+    matchLabels:
+      run: cni-test
+  ingress: []
+  policyTypes:
+  - Ingress
+```
+
+A minimal implementation for the eBPF program would look like this:
+```c
+#include <linux/bpf.h>
+#include <linux/pkt_cls.h>
+#include <linux/if_ether.h>
+#include <linux/ip.h>
+#include <bpf/bpf_helpers.h>
+#include <bpf/bpf_endian.h>
+
+SEC("tc")
+int tc_block_ingress(struct __sk_buff *skb)
+{
+  const __be32 pod_ip = 0x0AF40014; // 10.244.0.20
+
+  void *data = (void *)(long)skb->data;
+  void *data_end = (void *)(long)skb->data_end;
+
+  // Satisfy verifier.
+  struct ethhdr *eth = data;
+  if ((void *)(eth + 1) > data_end)
+    return TC_ACT_OK;
+
+  // Only inspect IPv4 packets, let everything else pass.
+  if (eth->h_proto != __bpf_htons(ETH_P_IP))
+    return TC_ACT_OK;
+
+  struct iphdr *ip = (void *)(eth + 1);
+  if ((void *)(ip + 1) > data_end)
+    return TC_ACT_OK;
+
+  // Drop anything headed for the pod IP.
+  if (ip->daddr == __bpf_htonl(pod_ip))
+    return TC_ACT_SHOT;
+
+  return TC_ACT_OK;
+}
+
+char LICENSE[] SEC("license") = "GPL";
+```
+
+To compile and attach it, run:
+```bash
+make bpf-netpol
+```
+
+With the program attached, `make validate-pod-connectivity` no longer reaches the Pod. To detach it and restore connectivity, run:
+```bash
+make bpf-clean-netpol
 ```
 
 ## References
