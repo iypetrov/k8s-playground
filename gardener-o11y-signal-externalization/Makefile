@@ -22,7 +22,6 @@ deploy-shoot:
 deploy-ngrok-operator:
 	@: $${NGROK_API_KEY:?NGROK_API_KEY is not set — export it before running this target}
 	@: $${NGROK_AUTHTOKEN:?NGROK_AUTHTOKEN is not set — export it before running this target}
-	@kubectl --kubeconfig $(KUBECONFIG_SHOOT) apply -k k8s/
 	@KUBECONFIG=$(KUBECONFIG_SHOOT) helm repo add ngrok https://charts.ngrok.com
 	@KUBECONFIG=$(KUBECONFIG_SHOOT) helm repo update
 	@KUBECONFIG=$(KUBECONFIG_SHOOT) helm upgrade --install ngrok-operator ngrok/ngrok-operator \
@@ -32,7 +31,16 @@ deploy-ngrok-operator:
 	  --set credentials.apiKey="$$NGROK_API_KEY" \
 	  --set credentials.authtoken="$$NGROK_AUTHTOKEN"
 
+.PHONY: deploy-clickstack
+deploy-clickstack:
+	@KUBECONFIG=$(KUBECONFIG_SHOOT) helm repo add clickstack https://clickhouse.github.io/ClickStack-helm-charts
+	@KUBECONFIG=$(KUBECONFIG_SHOOT) helm repo update
+	@KUBECONFIG=$(KUBECONFIG_SHOOT) helm upgrade --install clickstack-operators clickstack/clickstack-operators \
+	  --values values/clickstack-operators.yaml && \
+	 KUBECONFIG=$(KUBECONFIG_SHOOT) helm upgrade --install clickstack clickstack/clickstack \
+	  --values values/clickstack.yaml \
+
 
 .PHONY: o11y-receiver
-o11y-receiver: deploy-ngrok-operator
+o11y-receiver: deploy-ngrok-operator deploy-clickstack
 	@kubectl --kubeconfig $(KUBECONFIG_SHOOT) apply -k k8s/
