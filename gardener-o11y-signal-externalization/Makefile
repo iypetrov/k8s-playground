@@ -20,10 +20,10 @@ deploy-shoot:
 # https://ngrok.com/docs/getting-started/kubernetes/ingress#simple.
 .PHONY: deploy-ngrok-operator
 deploy-ngrok-operator:
-	@kubectl apply -k k8s/
-	@helm repo add ngrok https://charts.ngrok.com
-	@helm repo update
-	@helm install ngrok-operator ngrok/ngrok-operator \
+	@kubectl --kubeconfig $(KUBECONFIG_SHOOT) apply -k k8s/
+	@KUBECONFIG=$(KUBECONFIG_SHOOT) helm repo add ngrok https://charts.ngrok.com
+	@KUBECONFIG=$(KUBECONFIG_SHOOT) helm repo update
+	@KUBECONFIG=$(KUBECONFIG_SHOOT) helm install ngrok-operator ngrok/ngrok-operator \
 	  --namespace ngrok-operator \
 	  --create-namespace \
 	  --values values/ngrok-operator.yaml
@@ -31,4 +31,4 @@ deploy-ngrok-operator:
 
 .PHONY: deploy-ngrok-operator o11y-receiver 
 o11y-receiver:
-	@kubectl apply -k k8s/
+	@kubectl --kubeconfig $(KUBECONFIG_SHOOT) apply -k k8s/
