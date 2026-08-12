@@ -20,13 +20,17 @@ deploy-shoot:
 # https://ngrok.com/docs/getting-started/kubernetes/ingress#simple.
 .PHONY: deploy-ngrok-operator
 deploy-ngrok-operator:
+	@: $${NGROK_API_KEY:?NGROK_API_KEY is not set — export it before running this target}
+	@: $${NGROK_AUTHTOKEN:?NGROK_AUTHTOKEN is not set — export it before running this target}
 	@kubectl --kubeconfig $(KUBECONFIG_SHOOT) apply -k k8s/
 	@KUBECONFIG=$(KUBECONFIG_SHOOT) helm repo add ngrok https://charts.ngrok.com
 	@KUBECONFIG=$(KUBECONFIG_SHOOT) helm repo update
 	@KUBECONFIG=$(KUBECONFIG_SHOOT) helm install ngrok-operator ngrok/ngrok-operator \
 	  --namespace ngrok-operator \
 	  --create-namespace \
-	  --values values/ngrok-operator.yaml
+	  --values values/ngrok-operator.yaml \
+	  --set credentials.apiKey="$$NGROK_API_KEY" \
+	  --set credentials.authtoken="$$NGROK_AUTHTOKEN"
 
 
 .PHONY: o11y-receiver

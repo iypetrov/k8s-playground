@@ -238,8 +238,8 @@ log:
 credentials:
   secret:
     name: ""
-  apiKey: $NGROK_API_KEY
-  authtoken: $NGROK_AUTHTOKEN
+  apiKey: ""
+  authtoken: ""
 
 ##
 ## @section Kubernetes Ingress feature configuration
