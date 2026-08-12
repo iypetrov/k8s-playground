@@ -46,6 +46,8 @@ kind: Ingress
 metadata:
   name: tinyllama
   namespace: default
+  annotations:
+    k8s.ngrok.com/traffic-policy: strip-tinyllama
 spec:
   ingressClassName: ngrok
   rules:
@@ -59,3 +61,17 @@ spec:
                 name: tinyllama
                 port:
                   number: 80
+---
+apiVersion: ngrok.k8s.ngrok.com/v1alpha1
+kind: NgrokTrafficPolicy
+metadata:
+  name: strip-tinyllama
+  namespace: default
+spec:
+  policy:
+    on_http_request:
+      - actions:
+          - type: url-rewrite
+            config:
+              from: ^/tinyllama(/.*)?$
+              to: ${1}
