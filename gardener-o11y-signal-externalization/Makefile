@@ -25,7 +25,7 @@ deploy-ngrok-operator:
 	@kubectl --kubeconfig $(KUBECONFIG_SHOOT) apply -k k8s/
 	@KUBECONFIG=$(KUBECONFIG_SHOOT) helm repo add ngrok https://charts.ngrok.com
 	@KUBECONFIG=$(KUBECONFIG_SHOOT) helm repo update
-	@KUBECONFIG=$(KUBECONFIG_SHOOT) helm install ngrok-operator ngrok/ngrok-operator \
+	@KUBECONFIG=$(KUBECONFIG_SHOOT) helm upgrade --install ngrok-operator ngrok/ngrok-operator \
 	  --namespace ngrok-operator \
 	  --create-namespace \
 	  --values values/ngrok-operator.yaml \
