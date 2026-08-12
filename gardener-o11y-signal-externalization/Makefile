@@ -36,8 +36,10 @@ deploy-clickstack:
 	@KUBECONFIG=$(KUBECONFIG_SHOOT) helm repo add clickstack https://clickhouse.github.io/ClickStack-helm-charts
 	@KUBECONFIG=$(KUBECONFIG_SHOOT) helm repo update
 	@KUBECONFIG=$(KUBECONFIG_SHOOT) helm upgrade --install clickstack-operators clickstack/clickstack-operators \
+	  --create-namespace \
 	  --values values/clickstack-operators.yaml && \
 	 KUBECONFIG=$(KUBECONFIG_SHOOT) helm upgrade --install clickstack clickstack/clickstack \
+	  --create-namespace \
 	  --values values/clickstack.yaml \
 
 
