@@ -260,7 +260,20 @@ hyperdx:
   ingress:
     enabled: false
     annotations: {}
-    spec: {}
+    spec:
+      ingressClassName: ngrok
+      rules:
+        - host: "guy-multiflorous-semaj.ngrok-free.dev"
+          http:
+            paths:
+              - path: /clickstack
+                pathType: Prefix
+                backend:
+                  service:
+                    name: clickstack-app
+                    namespace:
+                    port:
+                      number: 3000
     additionalIngresses: []
 
   # ── K8s PodDisruptionBudget ──────────────────────────────

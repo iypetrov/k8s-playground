@@ -52,7 +52,7 @@ spec:
     - host: "guy-multiflorous-semaj.ngrok-free.dev"
       http:
         paths:
-          - path: /
+          - path: /tinyllama
             pathType: Prefix
             backend:
               service:
