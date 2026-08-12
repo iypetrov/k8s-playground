@@ -38,10 +38,12 @@ deploy-clickstack:
 	@KUBECONFIG=$(KUBECONFIG_SHOOT) helm upgrade --install clickstack-operators clickstack/clickstack-operators \
 	  --namespace clickstack \
 	  --create-namespace \
-	  --values values/clickstack-operators.yaml && \
-	 KUBECONFIG=$(KUBECONFIG_SHOOT) helm upgrade --install clickstack clickstack/clickstack \
+	  --wait \
+	  --values values/clickstack-operators.yaml
+	@KUBECONFIG=$(KUBECONFIG_SHOOT) helm upgrade --install clickstack clickstack/clickstack \
 	  --namespace clickstack \
-	  --values values/clickstack.yaml \
+	  --create-namespace \
+	  --values values/clickstack.yaml
 
 
 .PHONY: o11y-receiver
