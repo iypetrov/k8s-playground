@@ -29,6 +29,6 @@ deploy-ngrok-operator:
 	  --values values/ngrok-operator.yaml
 
 
-.PHONY: deploy-ngrok-operator o11y-receiver 
-o11y-receiver:
+.PHONY: o11y-receiver
+o11y-receiver: deploy-ngrok-operator
 	@kubectl --kubeconfig $(KUBECONFIG_SHOOT) apply -k k8s/
