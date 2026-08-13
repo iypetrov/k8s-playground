@@ -107,8 +107,8 @@ hyperdx:
     tolerations: []
     topologySpreadConstraints: []
     priorityClassName: ""
-    # Annotations applied to the HyperDX Deployment metadata.
-    deploymentAnnotations: {}
+    deploymentAnnotations:
+      reloader.stakater.com/auto: "true"
     # Annotations applied to the HyperDX pod template metadata.
     podAnnotations: {}
     # Deprecated: use podAnnotations. Retained for backward compatibility;
