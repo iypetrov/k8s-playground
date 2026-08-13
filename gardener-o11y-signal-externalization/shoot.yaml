@@ -25,6 +25,10 @@ spec:
                   endpoint: "http://172.18.255.227:4318"
                   compression: gzip
                   encoding: proto
+                  token:
+                    resourceRef:
+                      name: otelcol-bearer-token
+                      dataKey: token
               signals: [logs]
   resources:
   - name: otelcol-bearer-token
