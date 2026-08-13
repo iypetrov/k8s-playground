@@ -11,6 +11,7 @@ KUBECONFIG_SHOOT ?= /root/go/src/github.com/gardener/gardener/dev-setup/kubeconf
 .PHONY: deploy-shoot
 deploy-shoot:
 	@kubectl --kubeconfig $(KUBECONFIG_VIRTUAL) apply -f shoot.yaml
+	@kubectl --kubeconfig $(KUBECONFIG_RUNTIME) --namespace shoot--local--local annotate extensions otelcol gardener.cloud/operation=reconcile
 
 .PHONY: deploy-stakater-reloader
 deploy-stakater-reloader:
