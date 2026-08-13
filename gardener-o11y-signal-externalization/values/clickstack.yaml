@@ -62,7 +62,7 @@ hyperdx:
     CLICKHOUSE_USER: "otelcollector"
     RUN_SCHEDULED_TASKS_EXTERNALLY: "false"
     # Service endpoint defaults -- override to use external instances
-    FRONTEND_URL: "https://clickstack.ip812.com"
+    FRONTEND_URL: "https://clickstac.ip812.com"
     MONGO_URI: 'mongodb://hyperdx:{{ .Values.hyperdx.secrets.MONGODB_PASSWORD }}@{{ include "clickstack.mongodb.svc" . }}:27017/hyperdx?authSource=hyperdx'
     OTEL_EXPORTER_OTLP_ENDPOINT: 'http://{{ include "clickstack.otel.fullname" . }}:4318'
     CLICKHOUSE_ENDPOINT: 'tcp://{{ include "clickstack.clickhouse.svc" . }}:{{ .Values.clickhouse.nativePort }}?dial_timeout=10s'
