@@ -28,7 +28,7 @@ deploy-clickstack:
 
 
 .PHONY: o11y-receiver
-o11y-receiver: deploy-ngrok-operator deploy-clickstack
+o11y-receiver: deploy-clickstack
 	@: $${CLOUDFLARED_TUNNEL_TOKEN:?CLOUDFLARED_TUNNEL_TOKEN is not set — export it before running this target}
 	@kubectl --kubeconfig $(KUBECONFIG_SHOOT) create secret generic cloudflared-creds --from-literal=TUNNEL_TOKEN="$$CLOUDFLARED_TUNNEL_TOKEN"
 	@kubectl --kubeconfig $(KUBECONFIG_SHOOT) apply -k k8s/
