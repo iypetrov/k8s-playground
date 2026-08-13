@@ -1,0 +1,51 @@
+---
+# Gardener shoots ship a default-deny posture for cross-namespace pod traffic.
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-cloudflared-to-hyperdx
+  namespace: clickstack
+spec:
+  podSelector:
+    matchLabels:
+      app: clickstack
+  policyTypes:
+  - Ingress
+  ingress:
+  - from:
+    - namespaceSelector:
+        matchLabels:
+          kubernetes.io/metadata.name: cloudflared
+    ports:
+    - protocol: TCP
+      port: 3000
+# metadata:                                                                                                                                                                                                             │
+#   name: clickstack-otel-collector                                                                                                                                                                                     │
+#   namespace: clickstack                                                                                                                                                                                               │
+# spec:                                                                                                                                                                                                                 │
+#   ports:                                                                                                                                                                                                              │
+#   - name: fluentd                                                                                                                                                                                                     │
+#     port: 24225                                                                                                                                                                                                       │
+#     protocol: TCP                                                                                                                                                                                                     │
+#     targetPort: 24225                                                                                                                                                                                                 │
+#   - name: health-check                                                                                                                                                                                                │
+#     port: 13133                                                                                                                                                                                                       │
+#     protocol: TCP                                                                                                                                                                                                     │
+#     targetPort: 13133                                                                                                                                                                                                 │
+#   - name: metrics                                                                                                                                                                                                     │
+#     port: 8888                                                                                                                                                                                                        │
+#     protocol: TCP                                                                                                                                                                                                     │
+#     targetPort: 8888                                                                                                                                                                                                  │
+#   - appProtocol: grpc                                                                                                                                                                                                 │
+#     name: otlp                                                                                                                                                                                                        │
+#     port: 4317                                                                                                                                                                                                        │
+#     protocol: TCP                                                                                                                                                                                                     │
+#     targetPort: 4317                                                                                                                                                                                                  │
+#   - name: otlp-http                                                                                                                                                                                                   │
+#     port: 4318                                                                                                                                                                                                        │
+#     protocol: TCP                                                                                                                                                                                                     │
+#     targetPort: 4318                                                                                                                                                                                                  │
+#   selector:                                                                                                                                                                                                           │
+#     app.kubernetes.io/instance: clickstack                                                                                                                                                                            │
+#     app.kubernetes.io/name: otel-collector                                                                                                                                                                            │
+#     component: standalone-collector                                                                                                                                                                                   │
