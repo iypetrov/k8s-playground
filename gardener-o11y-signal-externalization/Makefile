@@ -12,6 +12,15 @@ KUBECONFIG_SHOOT ?= /root/go/src/github.com/gardener/gardener/dev-setup/kubeconf
 deploy-shoot:
 	@kubectl --kubeconfig $(KUBECONFIG_VIRTUAL) apply -f shoot.yaml
 
+.PHONY: deploy-stakater-reloader
+deploy-stakater-reloader:
+	@KUBECONFIG=$(KUBECONFIG_SHOOT) helm repo add stakater https://stakater.github.io/stakater-charts
+	@KUBECONFIG=$(KUBECONFIG_SHOOT) helm repo update
+	@KUBECONFIG=$(KUBECONFIG_SHOOT) helm upgrade --install reloader stakater/reloader \
+	  --namespace reloader \
+	  --create-namespace \
+	  --values values/reloader.yaml
+
 .PHONY: deploy-clickstack
 deploy-clickstack:
 	@KUBECONFIG=$(KUBECONFIG_SHOOT) helm repo add clickstack https://clickhouse.github.io/ClickStack-helm-charts
@@ -28,7 +37,7 @@ deploy-clickstack:
 
 
 .PHONY: o11y-receiver
-o11y-receiver: deploy-clickstack
+o11y-receiver: deploy-stakater-reloader deploy-clickstack
 	@: $${CLOUDFLARED_TUNNEL_TOKEN:?CLOUDFLARED_TUNNEL_TOKEN is not set — export it before running this target}
 	@kubectl --kubeconfig $(KUBECONFIG_SHOOT) create secret generic cloudflared-creds --from-literal=TUNNEL_TOKEN="$$CLOUDFLARED_TUNNEL_TOKEN"
 	@kubectl --kubeconfig $(KUBECONFIG_SHOOT) apply -k k8s/
