@@ -22,7 +22,7 @@ spec:
           targets:
             - exporter:
                 otlp_http:
-                  endpoint: "https://api.local.local.external.local.gardener.cloud:30003"
+                  endpoint: "https://api.local.local.external.local.gardener.cloud:30004"
                   compression: gzip
                   encoding: proto
               signals: [logs]
