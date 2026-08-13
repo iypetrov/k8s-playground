@@ -25,23 +25,6 @@ spec:
                   endpoint: "https://api.local.local.external.local.gardener.cloud:30003"
                   compression: gzip
                   encoding: proto
-                  token:
-                    resourceRef:
-                      name: otelcol-bearer-token
-                      dataKey: token
-                  tls:
-                    ca:
-                      resourceRef:
-                        name: otelcol-tls
-                        dataKey: ca.crt
-                    cert:
-                      resourceRef:
-                        name: otelcol-tls
-                        dataKey: client.crt
-                    key:
-                      resourceRef:
-                        name: otelcol-tls
-                        dataKey: client.key
               signals: [logs]
   resources:
   - name: otelcol-bearer-token
