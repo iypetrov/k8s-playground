@@ -39,6 +39,6 @@ deploy-clickstack:
 .PHONY: o11y-receiver
 o11y-receiver: deploy-stakater-reloader deploy-clickstack
 	@: $${CLOUDFLARED_TUNNEL_TOKEN:?CLOUDFLARED_TUNNEL_TOKEN is not set — export it before running this target}
-	@kubectl --kubeconfig $(KUBECONFIG_SHOOT) create namespace cloudflared || true
-	@kubectl --kubeconfig $(KUBECONFIG_SHOOT) create secret generic cloudflared-creds --namespace cloudflared --from-literal=TUNNEL_TOKEN="$$CLOUDFLARED_TUNNEL_TOKEN"
-	@kubectl --kubeconfig $(KUBECONFIG_SHOOT) apply -k k8s/
+	@trap 'rm -f k8s/cloudflared-creds.env' EXIT; \
+	  printf 'TUNNEL_TOKEN=%s\n' "$$CLOUDFLARED_TUNNEL_TOKEN" > k8s/cloudflared-creds.env; \
+	  kubectl --kubeconfig $(KUBECONFIG_SHOOT) apply -k k8s/

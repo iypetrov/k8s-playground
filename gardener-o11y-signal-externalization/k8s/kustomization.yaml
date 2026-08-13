@@ -4,3 +4,12 @@ kind: Kustomization
 resources:
 - demo-ngrok.yaml
 - cloudflared.yaml
+
+generatorOptions:
+  disableNameSuffixHash: true
+
+secretGenerator:
+- name: cloudflared-creds
+  namespace: cloudflared
+  envs:
+  - cloudflared-creds.env
