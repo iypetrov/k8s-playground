@@ -18,7 +18,6 @@ sync-hyperdx-api-key:
 	@echo "Injecting bearer-token auth references into shoot.yaml..."
 	@yq -i '.spec.extensions[0].providerConfig.spec.targets[0].exporter.otlp_http.token.resourceRef = {"name": "clickstack-bearer-token", "dataKey": "token"}' shoot.yaml
 	@yq -i '.spec.resources = [{"name": "clickstack-bearer-token", "resourceRef": {"apiVersion": "v1", "kind": "Secret", "name": "hyperdx-otelcol-bearer-token"}}]' shoot.yaml
-	@echo --- >> shoot.yaml
 	@echo "Reading ingestion token from the ClickStack collector..."
 	@TOKEN=$$(kubectl --kubeconfig $(KUBECONFIG_SHOOT) --namespace clickstack exec deploy/clickstack-otel-collector -- grep -A1 'tokens:' /etc/otel/supervisor-data/effective.yaml | tail -n1 | awk '{print $$NF}' | tr -d '[:space:]'); \
 	  if [ -z "$$TOKEN" ]; then echo "ERROR: could not read token from ClickStack collector" >&2; exit 1; fi; \
