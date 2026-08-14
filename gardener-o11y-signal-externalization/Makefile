@@ -13,12 +13,7 @@ deploy-shoot:
 	@kubectl --kubeconfig $(KUBECONFIG_VIRTUAL) apply -f shoot.yaml
 	@kubectl --kubeconfig $(KUBECONFIG_RUNTIME) --namespace shoot--local--local annotate extensions otelcol gardener.cloud/operation=reconcile
 
-.PHONY: deploy-shoot
-deploy-shoot:
-	@kubectl --kubeconfig $(KUBECONFIG_VIRTUAL) apply -f shoot.yaml
-	@kubectl --kubeconfig $(KUBECONFIG_RUNTIME) --namespace shoot--local--local annotate extensions otelcol gardener.cloud/operation=reconcile
-
-.PHONY: sync-hyperdx-api-key:
+.PHONY: sync-hyperdx-api-key
 sync-hyperdx-api-key:
 	@echo "Injecting bearer-token auth references into shoot.yaml..."
 	@yq -i '.spec.extensions[0].providerConfig.spec.targets[0].exporter.otlp_http.token.resourceRef = {"name": "clickstack-bearer-token", "dataKey": "token"}' shoot.yaml
