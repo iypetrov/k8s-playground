@@ -28,8 +28,8 @@ spec:
                   endpoint: "http://172.18.255.227:4318"
                   compression: gzip
                   encoding: proto
+                  scheme: ""
                   token:
-                    scheme: ""
                     resourceRef:
                       name: otelcol-bearer-token
                       dataKey: token
