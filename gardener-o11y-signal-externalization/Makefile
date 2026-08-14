@@ -10,6 +10,11 @@ KUBECONFIG_SHOOT ?= /root/go/src/github.com/gardener/gardener/dev-setup/kubeconf
 
 .PHONY: deploy-shoot
 deploy-shoot:
+	@echo "Syncing HyperDX ingestion token from the ClickStack collector..."
+	@TOKEN=$$(kubectl --kubeconfig $(KUBECONFIG_SHOOT) --namespace clickstack exec deploy/clickstack-otel-collector -- grep -A1 'tokens:' /etc/otel/supervisor-data/effective.yaml | tail -n1 | awk '{print $$NF}' | tr -d '[:space:]'); \
+	  if [ -z "$$TOKEN" ]; then echo "ERROR: could not read token from ClickStack collector" >&2; exit 1; fi; \
+	  echo "Token: $$TOKEN"; \
+	  TOKEN="$$TOKEN" yq -i '(select(.kind == "Secret" and .metadata.name == "my-otelcol-bearer-token") | .stringData.token) = env(TOKEN)' shoot.yaml
 	@kubectl --kubeconfig $(KUBECONFIG_VIRTUAL) apply -f shoot.yaml
 	@kubectl --kubeconfig $(KUBECONFIG_RUNTIME) --namespace shoot--local--local annotate extensions otelcol gardener.cloud/operation=reconcile
 
