@@ -22,7 +22,10 @@ spec:
           targets:
             - exporter:
                 otlp_http:
-                  endpoint: "http://clickstack-otel-collector-lb.clickstack.svc.cluster.local:4318"
+                  # The envoy LoadBalancer IP is the only address reachable from
+                  # the seed AND allow-listed by the shoot's allow-machine-pods
+                  # NetworkPolicy.
+                  endpoint: "http://172.18.255.227:4318"
                   compression: gzip
                   encoding: proto
                   token:
