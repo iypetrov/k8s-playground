@@ -24,7 +24,6 @@ spec:
                 otlp_http:
                   endpoint: "http://172.18.255.227:4318"
                   compression: gzip
-                  encoding: proto
                   headers:
                     authorization: "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
               signals: [logs]
