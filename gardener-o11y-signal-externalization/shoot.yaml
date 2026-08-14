@@ -24,17 +24,8 @@ spec:
                 otlp_http:
                   endpoint: "http://172.18.255.227:4318"
                   compression: gzip
-                  token:
-                    resourceRef:
-                      name: otelcol-bearer-token
-                      dataKey: token
+                  scheme: ""
               signals: [logs]
-  resources:
-  - name: otelcol-bearer-token
-    resourceRef:
-      apiVersion: v1
-      kind: Secret
-      name: my-otelcol-bearer-token
   cloudProfile:
     name: local
     kind: CloudProfile
@@ -64,12 +55,3 @@ spec:
       registryBurst: 20
       protectKernelDefaults: true
       streamingConnectionIdleTimeout: 5m
----
-apiVersion: v1
-kind: Secret
-metadata:
-  name: my-otelcol-bearer-token
-  namespace: garden-local
-type: Opaque
-stringData:
-  token: "REPLACE_WITH_CLICKSTACK_TOKEN"
