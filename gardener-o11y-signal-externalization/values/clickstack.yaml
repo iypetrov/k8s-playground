@@ -78,7 +78,7 @@ hyperdx:
   # mongodb, clickhouse, and otel-collector to all be disabled. Users must
   # provide all required environment variables through their own secret management.
   secrets:
-    HYPERDX_API_KEY: "secret"
+    HYPERDX_API_KEY: "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
     CLICKHOUSE_PASSWORD: "otelcollectorpass"
     CLICKHOUSE_APP_PASSWORD: "hyperdx"
     MONGODB_PASSWORD: "hyperdx"
