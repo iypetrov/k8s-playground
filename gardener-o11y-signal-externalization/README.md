@@ -11,7 +11,7 @@ alias ks="kubectl --kubeconfig $KUBECONFIG_SHOOT"
 make -C /root/go/src/github.com/gardener/gardener kind-up gardener-up
 
 # deploy the otelcol extesnion
-make -C /root/go/src/github.com/gardener/gardener-extension-otel-col deploy-operator
+make -C /root/go/src/github.com/gardener/gardener-extension-otelcol deploy-operator
 
 # create a shoot cluster
 make -C /root/go/src/github.com/gardener/k8s-playground/gardener-o11y-signal-externalization deploy-base-shoot 
