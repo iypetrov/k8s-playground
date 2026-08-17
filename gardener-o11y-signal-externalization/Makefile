@@ -21,6 +21,11 @@ CERT_DIR ?= certs
 remote-local-setup:
 	@knav apply -f remote-local-setup.yaml
 
+# Use it only for the bootstraping.
+.PHONY: deploy-base-shoot
+deploy-base-shoot:
+	@kubectl --kubeconfig $(KUBECONFIG_VIRTUAL) apply -f shoot.base.yaml
+
 .PHONY: deploy-shoot
 deploy-shoot:
 	@kubectl --kubeconfig $(KUBECONFIG_VIRTUAL) apply -f shoot.yaml
