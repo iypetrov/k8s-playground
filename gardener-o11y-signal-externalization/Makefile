@@ -31,22 +31,26 @@ deploy-shoot:
 	@kubectl --kubeconfig $(KUBECONFIG_VIRTUAL) apply -f shoot.yaml
 	@kubectl --kubeconfig $(KUBECONFIG_RUNTIME) --namespace shoot--local--local annotate extensions otelcol gardener.cloud/operation=reconcile
 
+.PHONY: generate-certificates
 generate-certificates:
-	@[[ -d certs ]] && chmod +x scripts/generate-certificates.sh && bash scripts/generate-certificates.sh
+	@chmod +x scripts/generate-certificates.sh && bash scripts/generate-certificates.sh
 	@echo "ClickStack..."
 	@kubectl --kubeconfig $(KUBECONFIG_SHOOT) --namespace clickstack \
 		create secret generic clickstack-otel-tls \
 	 	--from-file=tls.crt=$(CERT_DIR)/clickstack-server.crt \
 	  	--from-file=tls.key=$(CERT_DIR)/clickstack-server.key \
-	  	--from-file=ca.crt=$(CERT_DIR)/ca.crt
+	  	--from-file=ca.crt=$(CERT_DIR)/ca.crt \
+		--dry-run=client -o yaml | kubectl --kubeconfig $(KUBECONFIG_SHOOT) apply -f -
 	@kubectl --kubeconfig $(KUBECONFIG_VIRTUAL) --namespace garden-local \
 		create secret generic hyperdx-otelcol-bearer-token \
-	  	--from-literal=token="$(OTLP_FIXED_TOKEN)"
+	  	--from-literal=token="$(OTLP_FIXED_TOKEN)" \
+		--dry-run=client -o yaml | kubectl --kubeconfig $(KUBECONFIG_VIRTUAL) apply -f -
 	@kubectl --kubeconfig $(KUBECONFIG_VIRTUAL) --namespace garden-local \
 		create secret generic hyperdx-otelcol-tls \
 	 	--from-file=ca.crt=$(CERT_DIR)/ca.crt \
 		--from-file=client.crt=$(CERT_DIR)/clickstack-client.crt \
-	  	--from-file=client.key=$(CERT_DIR)/clickstack-client.key
+	  	--from-file=client.key=$(CERT_DIR)/clickstack-client.key \
+		--dry-run=client -o yaml | kubectl --kubeconfig $(KUBECONFIG_VIRTUAL) apply -f -
 
 
 .PHONY: deploy-stakater-reloader
