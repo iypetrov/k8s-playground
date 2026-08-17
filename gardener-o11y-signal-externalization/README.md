@@ -27,6 +27,6 @@ make -C /root/go/src/github.com/gardener/k8s-playground/gardener-o11y-signal-ext
 ```
 
 ```bash
-# To clean-up the Gardener setup.
+# clean-up the gardener setup
 make -C /root/go/src/github.com/gardener/gardener kind-down
 ```
