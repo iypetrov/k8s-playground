@@ -15,8 +15,10 @@ make -C /root/go/src/github.com/gardener/gardener-extension-otelcol deploy-opera
 
 # create a shoot cluster
 make -C /root/go/src/github.com/gardener/k8s-playground/gardener-o11y-signal-externalization deploy-base-shoot 
-[[ "$(kubectl --kubeconfig $KUBECONFIG_VIRTUAL get shoots -n garden-local -o json | jq -r 'any(.items[]; .metadata.name == "local" and .status.lastOperation.progress == 100)')" == "true" ]] && \
-    KUBECONFIG=$KUBECONFIG_VIRTUAL bash /root/go/src/github.com/gardener/gardener/hack/usage/generate-kubeconfig.sh shoot > $KUBECONFIG_SHOOT
+until [[ "$(kubectl --kubeconfig $KUBECONFIG_VIRTUAL get shoots -n garden-local -o json | jq -r 'any(.items[]; .metadata.name == "local" and .status.lastOperation.progress == 100)')" == "true" ]]; do
+    echo "waiting for shoot 'local' to reconcile..." && sleep 10
+done
+KUBECONFIG=$KUBECONFIG_VIRTUAL bash /root/go/src/github.com/gardener/gardener/hack/usage/generate-kubeconfig.sh shoot > $KUBECONFIG_SHOOT
 
 # generate certificates + deploy the extesnion on the shoot
 make -C /root/go/src/github.com/gardener/k8s-playground/gardener-o11y-signal-externalization generate-certificates
