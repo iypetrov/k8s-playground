@@ -35,6 +35,7 @@ deploy-shoot:
 generate-certificates:
 	@chmod +x scripts/generate-certificates.sh && bash scripts/generate-certificates.sh
 	@echo "ClickStack..."
+	@kubectl --kubeconfig $(KUBECONFIG_SHOOT) create namespace clickstack
 	@kubectl --kubeconfig $(KUBECONFIG_SHOOT) --namespace clickstack \
 		create secret generic clickstack-otel-tls \
 	 	--from-file=tls.crt=$(CERT_DIR)/clickstack-server.crt \
@@ -68,7 +69,6 @@ deploy-clickstack:
 	@KUBECONFIG=$(KUBECONFIG_SHOOT) helm repo update
 	@KUBECONFIG=$(KUBECONFIG_SHOOT) helm upgrade --install clickstack-operators clickstack/clickstack-operators \
 	  --namespace clickstack \
-	  --create-namespace \
 	  --wait \
 	  --values values/clickstack-operators.yaml
 	@KUBECONFIG=$(KUBECONFIG_SHOOT) helm upgrade --install clickstack clickstack/clickstack \
