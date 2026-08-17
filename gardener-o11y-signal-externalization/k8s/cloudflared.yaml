@@ -19,7 +19,7 @@ data:
       # - hostname: otel-collector.clickstack.ip812.com
       #   service: tcp://clickstack-otel-collector.clickstack.svc.cluster.local:4318
       - hostname: otel-collector.clickstack.ip812.com
-        service: tcp://tcp-server.defaultk.svc.cluster.local:8080
+        service: tcp://tcp-server.default.svc.cluster.local:8080
       - service: http_status:404
 ---
 apiVersion: apps/v1
