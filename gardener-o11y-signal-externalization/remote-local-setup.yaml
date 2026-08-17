@@ -604,7 +604,7 @@ metadata:
   namespace: signal-externalization 
   annotations:
     service.beta.kubernetes.io/aws-load-balancer-type: nlb
-    dns.gardener.cloud/dnsnames: special.example.com
+    dns.gardener.cloud/dnsnames: clickstack-app.signal-externalization.dev-setup.i776104.shoot.dev.k8s-hana.ondemand.com
     dns.gardener.cloud/ttl: "600"
     dns.gardener.cloud/class: garden
 spec:
