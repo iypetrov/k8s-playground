@@ -14,8 +14,7 @@ KUBECONFIG=$KUBECONFIG_VIRTUAL bash /root/go/src/github.com/gardener/gardener/ha
 # deploy shoot's testing o11y stacks
 make o11y-receiver
 
-# login to hyperdx and create account
-# copy the hyperdx auth token and put it as a refs data in the shoot spec
-make sync-hyperdx-api-key
+# generate certificates + deploy the shoot
+make generate-certificates
 make deploy-shoot 
 ```

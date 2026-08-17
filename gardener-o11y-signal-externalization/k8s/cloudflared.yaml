@@ -16,6 +16,8 @@ data:
     ingress:
       - hostname: clickstack.ip812.com
         service: http://clickstack-app.clickstack.svc.cluster.local:3000
+      - hostname: otel-collector.clickstack.ip812.com
+        service: http://clickstack-otel-collector.clickstack.svc.cluster.local:4318
       - service: http_status:404
 ---
 apiVersion: apps/v1

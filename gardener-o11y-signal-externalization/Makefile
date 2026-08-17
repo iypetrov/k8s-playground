@@ -8,22 +8,32 @@ KUBECONFIG_VIRTUAL ?= /root/go/src/github.com/gardener/gardener/dev-setup/kubeco
 KUBECONFIG_RUNTIME ?= /root/go/src/github.com/gardener/gardener/dev-setup/kubeconfigs/runtime/kubeconfig
 KUBECONFIG_SHOOT ?= /root/go/src/github.com/gardener/gardener/dev-setup/kubeconfigs/shoot/kubeconfig
 
+# Fixed bearer token the ClickStack OTLP receiver enforces.
+# - Must match hyperdx.secrets.OTLP_FIXED_TOKEN in values/clickstack.yaml.
+OTLP_FIXED_TOKEN ?= 00000000-0000-4000-8000-000000000000
+CERT_DIR ?= certs
+
 .PHONY: deploy-shoot
 deploy-shoot:
 	@kubectl --kubeconfig $(KUBECONFIG_VIRTUAL) apply -f shoot.yaml
 	@kubectl --kubeconfig $(KUBECONFIG_RUNTIME) --namespace shoot--local--local annotate extensions otelcol gardener.cloud/operation=reconcile
 
-.PHONY: sync-hyperdx-api-key
-sync-hyperdx-api-key:
-	@echo "Injecting bearer-token auth references into shoot.yaml..."
-	@yq -i '.spec.extensions[0].providerConfig.spec.targets[0].exporter.otlp_http.token.resourceRef = {"name": "clickstack-bearer-token", "dataKey": "token"}' shoot.yaml
-	@yq -i '.spec.resources = [{"name": "clickstack-bearer-token", "resourceRef": {"apiVersion": "v1", "kind": "Secret", "name": "hyperdx-otelcol-bearer-token"}}]' shoot.yaml
-	@echo "Reading ingestion token from the ClickStack collector..."
-	@TOKEN=$$(kubectl --kubeconfig $(KUBECONFIG_SHOOT) --namespace clickstack exec deploy/clickstack-otel-collector -- grep -A1 'tokens:' /etc/otel/supervisor-data/effective.yaml | tail -n1 | awk '{print $$NF}' | tr -d '[:space:]'); \
-	  if [ -z "$$TOKEN" ]; then echo "ERROR: could not read token from ClickStack collector" >&2; exit 1; fi; \
-	  echo "Token: $$TOKEN"; \
-	  kubectl --kubeconfig $(KUBECONFIG_VIRTUAL) --namespace garden-local create secret generic hyperdx-otelcol-bearer-token \
-	    --from-literal=token="$$TOKEN" --dry-run=client -o yaml | kubectl --kubeconfig $(KUBECONFIG_VIRTUAL) apply -f -
+generate-certificates:
+	@[[ -d certs ]] && chmod +x scripts/generate-certificates.sh && bash scripts/generate-certificates.sh
+	@echo "ClickStack..."
+	@kubectl --kubeconfig $(KUBECONFIG_SHOOT) --namespace clickstack \
+		create secret generic clickstack-otel-tls \
+	 	--from-file=tls.crt=$(CERT_DIR)/clickstack-server.crt \
+	  	--from-file=tls.key=$(CERT_DIR)/clickstack-server.key \
+	  	--from-file=ca.crt=$(CERT_DIR)/ca.crt
+	@kubectl --kubeconfig $(KUBECONFIG_VIRTUAL) --namespace garden-local \
+		create secret generic hyperdx-otelcol-bearer-token \
+	  	--from-literal=token="$(OTLP_FIXED_TOKEN)"
+	@kubectl --kubeconfig $(KUBECONFIG_VIRTUAL) --namespace garden-local \
+		create secret generic hyperdx-otelcol-tls \
+	 	--from-file=ca.crt=$(CERT_DIR)/ca.crt \
+		--from-file=client.crt=$(CERT_DIR)/clickstack-client.crt \
+	  	--from-file=client.key=$(CERT_DIR)/clickstack-client.key
 
 
 .PHONY: deploy-stakater-reloader

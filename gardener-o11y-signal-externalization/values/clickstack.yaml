@@ -36,7 +36,34 @@ global:
     #         receivers: [hostmetrics]
     #         processors: [memory_limiter, batch]
     #         exporters: [clickhouse]
-    customConfig: ""
+    customConfig: |
+      extensions:
+        bearertokenauth/fixed:
+          scheme: "Bearer"
+          tokens:
+            - ${env:OTLP_FIXED_TOKEN}
+      receivers:
+        otlp:
+          protocols:
+            grpc:
+              endpoint: 0.0.0.0:4317
+              tls:
+                cert_file: /etc/otel/tls/tls.crt
+                key_file: /etc/otel/tls/tls.key
+                client_ca_file: /etc/otel/tls/ca.crt
+              auth:
+                authenticator: bearertokenauth/fixed
+            http:
+              endpoint: 0.0.0.0:4318
+              tls:
+                cert_file: /etc/otel/tls/tls.crt
+                key_file: /etc/otel/tls/tls.key
+                client_ca_file: /etc/otel/tls/ca.crt
+              auth:
+                authenticator: bearertokenauth/fixed
+      service:
+        extensions:
+          - bearertokenauth/fixed
 
 hyperdx:
   # Ports shared across Deployment, Service, ConfigMap, and Ingress
@@ -82,6 +109,10 @@ hyperdx:
     CLICKHOUSE_PASSWORD: "otelcollectorpass"
     CLICKHOUSE_APP_PASSWORD: "hyperdx"
     MONGODB_PASSWORD: "hyperdx"
+    # Fixed bearer token the OTLP receiver enforces (see
+    # global.otelCollector.customConfig). MUST match OTLP_FIXED_TOKEN in the
+    # Makefile, which puts the same value into the shoot's bearer-token secret.
+    OTLP_FIXED_TOKEN: "00000000-0000-4000-8000-000000000000"
 
   # ── K8s Deployment ───────────────────────────────────────
   deployment:
@@ -438,9 +469,16 @@ otel-collector:
       configMap:
         name: clickstack-otel-custom-config
         optional: true
+    - name: otel-tls
+      secret:
+        secretName: clickstack-otel-tls
+        defaultMode: 0444
   extraVolumeMounts:
     - name: custom-config
       mountPath: /etc/otelcol-contrib/custom
+      readOnly: true
+    - name: otel-tls
+      mountPath: /etc/otel/tls
       readOnly: true
   ports:
     otlp:
