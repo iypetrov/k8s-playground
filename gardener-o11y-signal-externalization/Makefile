@@ -13,14 +13,6 @@ KUBECONFIG_SHOOT ?= /root/go/src/github.com/gardener/gardener/dev-setup/kubeconf
 OTLP_FIXED_TOKEN ?= 00000000-0000-4000-8000-000000000000
 CERT_DIR ?= certs
 
-# Configure this with the correct kubeconfig for your shoot cluster.
-# Note: knav is a personal program, that wraps the kubectl.
-#
-# See more at: https://github.com/iypetrov/knav
-.PHONY: remote-local-setup
-remote-local-setup:
-	@knav apply -f remote-local-setup.yaml
-
 # Use it only for the bootstraping.
 .PHONY: deploy-base-shoot
 deploy-base-shoot:
@@ -79,4 +71,7 @@ deploy-clickstack:
 
 .PHONY: o11y-receiver
 o11y-receiver: deploy-stakater-reloader deploy-clickstack
-	@kubectl --kubeconfig $(KUBECONFIG_SHOOT) apply -k k8s/
+	@: $${CLOUDFLARED_TUNNEL_TOKEN:?CLOUDFLARED_TUNNEL_TOKEN is not set — export it before running this target}
+	@trap 'rm -f k8s/cloudflared-creds.env' EXIT; \
+	  printf 'TUNNEL_TOKEN=%s\n' "$$CLOUDFLARED_TUNNEL_TOKEN" > k8s/cloudflared-creds.env; \
+	  kubectl --kubeconfig $(KUBECONFIG_SHOOT) apply -k k8s/

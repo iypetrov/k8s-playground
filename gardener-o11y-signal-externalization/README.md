@@ -3,6 +3,7 @@ export KUBECONFIG_VIRTUAL=/root/go/src/github.com/gardener/gardener/dev-setup/ku
 export KUBECONFIG_RUNTIME=/root/go/src/github.com/gardener/gardener/dev-setup/kubeconfigs/runtime/kubeconfig
 export KUBECONFIG=$KUBECONFIG_RUNTIME
 export KUBECONFIG_SHOOT=/root/go/src/github.com/gardener/gardener/dev-setup/kubeconfigs/shoot/kubeconfig
+export CLOUDFLARED_TUNNEL_TOKEN=YOUR_TOKEN
 alias kr="kubectl --kubeconfig $KUBECONFIG_RUNTIME"
 alias kv="kubectl --kubeconfig $KUBECONFIG_VIRTUAL"
 alias ks="kubectl --kubeconfig $KUBECONFIG_SHOOT"
