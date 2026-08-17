@@ -14,9 +14,12 @@ OTLP_FIXED_TOKEN ?= 00000000-0000-4000-8000-000000000000
 CERT_DIR ?= certs
 
 # Configure this with the correct kubeconfig for your shoot cluster.
+# Note: knav is a personal program, that wraps the kubectl.
+#
+# See more at: https://github.com/iypetrov/knav
 .PHONY: remote-local-setup
 remote-local-setup:
-	@k apply -f remote-local-setup.yaml
+	@knav apply -f remote-local-setup.yaml
 
 .PHONY: deploy-shoot
 deploy-shoot:
