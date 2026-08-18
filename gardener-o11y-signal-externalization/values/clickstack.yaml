@@ -37,33 +37,33 @@ global:
     #         processors: [memory_limiter, batch]
     #         exporters: [clickhouse]
     customConfig: |
+      # STANDALONE-MODE OVERLAY (merged by CUSTOM_OTELCOL_CONFIG_FILE onto the
+      # image's standalone-config.yaml). OTel merges leaf-by-leaf, so we override
+      # ONLY the TLS leaf of the existing `otlp/hyperdx` http receiver -- we do
+      # NOT redeclare receivers/exporters/pipelines (that would drop the base's
+      # clickhouse exporter, routing connector, and processor lists).
+      #
+      # mTLS: serve tls.crt/tls.key and require+verify client certs against ca.crt
+      # (mounted from the clickstack-otel-tls secret at /etc/otel/tls). Combined
+      # with the bearer token the standalone-auth overlay wires onto the same
+      # receiver when OTLP_AUTH_TOKEN is set.
+      #
+      # The standalone-auth overlay declares bearertokenauth/hyperdx with
+      # scheme:"" (expects "Authorization: <token>"). The Gardener otelcol
+      # extension sender defaults to scheme "Bearer" (emits "Authorization:
+      # Bearer <token>"). Override the scheme here to "Bearer" so they agree,
+      # otherwise the receiver 401s. See extension types.go Scheme field.
       extensions:
-        bearertokenauth/fixed:
+        bearertokenauth/hyperdx:
           scheme: "Bearer"
-          tokens:
-            - ${env:HYPERDX_OTLP_FIXED_TOKEN}
       receivers:
-        otlp:
+        otlp/hyperdx:
           protocols:
-            grpc:
-              endpoint: 0.0.0.0:4317
-              tls:
-                cert_file: /etc/otel/tls/tls.crt
-                key_file: /etc/otel/tls/tls.key
-                client_ca_file: /etc/otel/tls/ca.crt
-              auth:
-                authenticator: bearertokenauth/fixed
             http:
-              endpoint: 0.0.0.0:4318
               tls:
                 cert_file: /etc/otel/tls/tls.crt
                 key_file: /etc/otel/tls/tls.key
                 client_ca_file: /etc/otel/tls/ca.crt
-              auth:
-                authenticator: bearertokenauth/fixed
-      service:
-        extensions:
-          - bearertokenauth/fixed
 
 hyperdx:
   # Ports shared across Deployment, Service, ConfigMap, and Ingress
@@ -454,6 +454,26 @@ otel-collector:
         name: clickstack-config
     - secretRef:
         name: clickstack-secret
+  # Force STANDALONE mode: with OPAMP_SERVER_URL unset the image stops taking
+  # its config from the HyperDX OpAMP server (which shipped a debug-only,
+  # no-ClickHouse relay.yaml) and instead runs its built-in standalone base
+  # config (real `clickhouse` exporter, wired from CLICKHOUSE_* env) merged
+  # with CUSTOM_OTELCOL_CONFIG_FILE. Explicit `env` overrides the value that
+  # `extraEnvsFrom`/clickstack-config injects, and only on THIS collector --
+  # HyperDX keeps its own OPAMP_SERVER_URL. See
+  # https://clickhouse.com/docs/clickstack/ingesting-data/collector
+  extraEnvs:
+    - name: OPAMP_SERVER_URL
+      value: ""
+    # Activate the standalone bearer-token auth overlay (only included when
+    # OTLP_AUTH_TOKEN is set) and feed it the same fixed token the shoot's
+    # sender presents. Sourced from clickstack-secret so it stays in sync with
+    # HYPERDX_OTLP_FIXED_TOKEN.
+    - name: OTLP_AUTH_TOKEN
+      valueFrom:
+        secretKeyRef:
+          name: clickstack-secret
+          key: HYPERDX_OTLP_FIXED_TOKEN
   # Roll collector pods when global.otelCollector.customConfig changes.
   # Merges with any user-provided podAnnotations.
   podAnnotations:
