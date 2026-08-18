@@ -1,0 +1,87 @@
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: nginx-config
+  labels:
+    app: nginx-server
+data:
+  nginx.conf: |
+    worker_processes  1;
+
+    events {
+      worker_connections  1024;
+    }
+
+    http {
+      server {
+        listen 443 ssl;
+        server_name nginx-server;
+
+        ssl_certificate     /etc/nginx/tls/tls.crt;
+        ssl_certificate_key /etc/nginx/tls/tls.key;
+
+        ssl_client_certificate /etc/nginx/tls/ca.crt;
+        ssl_verify_client      on;
+
+        location / {
+          default_type text/plain;
+          return 200 "client cert OK: $ssl_client_s_dn\n";
+        }
+      }
+    }
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx-server
+  labels:
+    app: nginx-server
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: nginx-server
+  template:
+    metadata:
+      labels:
+        app: nginx-server
+      annotations:
+        reloader.stakater.com/auto: "true"
+    spec:
+      containers:
+      - image: nginx:alpine
+        name: nginx
+        ports:
+        - containerPort: 443
+          name: https
+        volumeMounts:
+        - name: nginx-config
+          mountPath: /etc/nginx/nginx.conf
+          subPath: nginx.conf
+          readOnly: true
+        - name: tls
+          mountPath: /etc/nginx/tls
+          readOnly: true
+      volumes:
+      - name: nginx-config
+        configMap:
+          name: nginx-config
+      - name: tls
+        secret:
+          secretName: nginx-tls
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: nginx-server
+  labels:
+    app: nginx-server
+spec:
+  type: ClusterIP
+  selector:
+    app: nginx-server
+  ports:
+  - name: https
+    port: 443
+    targetPort: 443

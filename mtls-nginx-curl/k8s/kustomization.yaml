@@ -1,0 +1,3 @@
+resources:
+  - nginx.yaml
+  - curl-client.yaml

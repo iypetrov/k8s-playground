@@ -1,0 +1,37 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: curl-client
+  labels:
+    app: curl-client
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: curl-client
+  template:
+    metadata:
+      labels:
+        app: curl-client
+      annotations:
+        reloader.stakater.com/auto: "true"
+    spec:
+      containers:
+      - image: curlimages/curl
+        name: curl
+        command: ["sleep", "infinity"]
+        volumeMounts:
+        - name: tls
+          mountPath: /etc/curl/tls
+          readOnly: true
+        - name: dummy-tls
+          mountPath: /etc/curl/dummy-tls
+          readOnly: true
+      volumes:
+      - name: tls
+        secret:
+          secretName: curl-client-tls
+      - name: dummy-tls
+        secret:
+          secretName: dummy-client-tls
