@@ -41,7 +41,7 @@ global:
         bearertokenauth/fixed:
           scheme: "Bearer"
           tokens:
-            - ${env:OTLP_FIXED_TOKEN}
+            - ${env:HYPERDX_OTLP_FIXED_TOKEN}
       receivers:
         otlp:
           protocols:
@@ -110,9 +110,9 @@ hyperdx:
     CLICKHOUSE_APP_PASSWORD: "hyperdx"
     MONGODB_PASSWORD: "hyperdx"
     # Fixed bearer token the OTLP receiver enforces (see
-    # global.otelCollector.customConfig). MUST match OTLP_FIXED_TOKEN in the
+    # global.otelCollector.customConfig). MUST match HYPERDX_OTLP_FIXED_TOKEN in the
     # Makefile, which puts the same value into the shoot's bearer-token secret.
-    OTLP_FIXED_TOKEN: "00000000-0000-4000-8000-000000000000"
+    HYPERDX_OTLP_FIXED_TOKEN: "00000000-0000-4000-8000-000000000000"
 
   # ── K8s Deployment ───────────────────────────────────────
   deployment:

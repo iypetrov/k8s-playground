@@ -9,8 +9,8 @@ KUBECONFIG_RUNTIME ?= /root/go/src/github.com/gardener/gardener/dev-setup/kubeco
 KUBECONFIG_SHOOT ?= /root/go/src/github.com/gardener/gardener/dev-setup/kubeconfigs/shoot/kubeconfig
 
 # Fixed bearer token the ClickStack OTLP receiver enforces.
-# - Must match hyperdx.secrets.OTLP_FIXED_TOKEN in values/clickstack.yaml.
-OTLP_FIXED_TOKEN ?= 00000000-0000-4000-8000-000000000000
+# - Must match hyperdx.secrets.HYPERDX_OTLP_FIXED_TOKEN in values/clickstack.yaml.
+HYPERDX_OTLP_FIXED_TOKEN ?= 00000000-0000-4000-8000-000000000000
 CERT_DIR ?= certs
 
 # Use it only for the bootstraping.
@@ -36,7 +36,7 @@ generate-certificates:
 		--dry-run=client -o yaml | kubectl --kubeconfig $(KUBECONFIG_SHOOT) apply -f -
 	@kubectl --kubeconfig $(KUBECONFIG_VIRTUAL) --namespace garden-local \
 		create secret generic hyperdx-otelcol-bearer-token \
-	  	--from-literal=token="$(OTLP_FIXED_TOKEN)" \
+	  	--from-literal=token="$(HYPERDX_OTLP_FIXED_TOKEN)" \
 		--dry-run=client -o yaml | kubectl --kubeconfig $(KUBECONFIG_VIRTUAL) apply -f -
 	@kubectl --kubeconfig $(KUBECONFIG_VIRTUAL) --namespace garden-local \
 		create secret generic hyperdx-otelcol-tls \
@@ -74,4 +74,8 @@ o11y-receiver: deploy-stakater-reloader deploy-clickstack
 	@: $${CLOUDFLARED_TUNNEL_TOKEN:?CLOUDFLARED_TUNNEL_TOKEN is not set — export it before running this target}
 	@trap 'rm -f k8s/cloudflared-creds.env' EXIT; \
 	  printf 'TUNNEL_TOKEN=%s\n' "$$CLOUDFLARED_TUNNEL_TOKEN" > k8s/cloudflared-creds.env; \
-	  kubectl --kubeconfig $(KUBECONFIG_SHOOT) apply -k k8s/
+	  kubectl --kubeconfig $(KUBECONFIG_SHOOT) apply -f k8s/cloudflared.yaml; \
+	  kubectl --kubeconfig $(KUBECONFIG_SHOOT) create secret generic cloudflared-creds -n cloudflared \
+	    --from-env-file=k8s/cloudflared-creds.env --dry-run=client -o yaml \
+	    | kubectl --kubeconfig $(KUBECONFIG_SHOOT) apply -f -; \
+	  kubectl --kubeconfig $(KUBECONFIG_SHOOT) apply -f k8s/clickstack.yaml

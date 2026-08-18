@@ -7,7 +7,7 @@ _SCRIPT_DIR=$( dirname "$( readlink -f -- "${0}" )" )
 _PROJECT_DIR="${_SCRIPT_DIR}/.."
 _CERTS_DIR="${_SCRIPT_DIR}/../certs"
 _CLICKSTACK_OTEL_COLLECTOR_PUB_DNS="otel-collector.clickstack.ip812.com"
-_CLICKSTACK_OTEL_COLLECTOR_SVC_DNS="clickstack-otel-collector.clickstack.svc.cluster.local"
+_CLICKSTACK_OTEL_COLLECTOR_LB_IPv4="172.18.255.227"
 
 # Main entrypoint
 function _main() {
@@ -29,7 +29,7 @@ function _main() {
         -out "${_CERTS_DIR}/clickstack-server.crt" \
         -CA "${_CERTS_DIR}/ca.crt" \
         -CAkey "${_CERTS_DIR}/ca.key" \
-        -extfile <( printf "subjectAltName=DNS:%s,DNS:%s" "${_CLICKSTACK_OTEL_COLLECTOR_PUB_DNS}" "${_CLICKSTACK_OTEL_COLLECTOR_SVC_DNS}" )
+        -extfile <( printf "subjectAltName=DNS:%s,IP:%s" "${_CLICKSTACK_OTEL_COLLECTOR_PUB_DNS}" "${_CLICKSTACK_OTEL_COLLECTOR_LB_IPv4}" )
 
     # ClickStack client cert
     openssl req -newkey rsa:4096 -nodes \
