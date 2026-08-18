@@ -46,7 +46,7 @@ spec:
                       resourceRef:
                         name: hyperdx-otelcol-tls
                         dataKey: client.key
-              signals: [logs,metrics,events]
+              signals: [logs]
   resources:
     - name: hyperdx-otelcol-bearer-token
       resourceRef:
