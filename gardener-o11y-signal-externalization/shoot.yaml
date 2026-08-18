@@ -47,11 +47,11 @@ spec:
                         name: hyperdx-otelcol-tls
                         dataKey: client.key
               signals: [logs]
-              filters:
-                error_mode: propagate
-                log_conditions:
-                  - conditions:
-                      - resource.attributes["gardener.project.name"] == "local"
+              # filters:
+              #   error_mode: propagate
+              #   log_conditions:
+              #     - conditions:
+              #         - resource.attributes["gardener.project.name"] == "local"
   resources:
     - name: hyperdx-otelcol-bearer-token
       resourceRef:
