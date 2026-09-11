@@ -46,12 +46,13 @@ spec:
                       resourceRef:
                         name: hyperdx-otelcol-tls
                         dataKey: client.key
-              signals: [logs]
+              signals: [events]
               # filters:
               #   error_mode: propagate
               #   log_conditions:
-              #     - conditions:
-              #         - resource.attributes["gardener.project.name"] == "local"
+              #     - context: resource
+              #       conditions:
+              #         - attributes["k8s.cluster.name"] == "shoot--local--local"
   resources:
     - name: hyperdx-otelcol-bearer-token
       resourceRef:

@@ -4,9 +4,9 @@
 SHELL = /usr/bin/env bash -o pipefail
 .SHELLFLAGS = -ec
 
-KUBECONFIG_VIRTUAL ?= /root/go/src/github.com/gardener/gardener/dev-setup/kubeconfigs/virtual-garden/kubeconfig
-KUBECONFIG_RUNTIME ?= /root/go/src/github.com/gardener/gardener/dev-setup/kubeconfigs/runtime/kubeconfig
-KUBECONFIG_SHOOT ?= /root/go/src/github.com/gardener/gardener/dev-setup/kubeconfigs/shoot/kubeconfig
+KUBECONFIG_VIRTUAL ?= /home/iypetrov/projects/oss/gardener-gardener/dev-setup/kubeconfigs/virtual-garden/kubeconfig
+KUBECONFIG_RUNTIME ?= /home/iypetrov/projects/oss/gardener-gardener/dev-setup/kubeconfigs/runtime/kubeconfig
+KUBECONFIG_SHOOT ?= /home/iypetrov/projects/oss/gardener-gardener/admin-kubeconf.yaml
 
 # Fixed bearer token the ClickStack OTLP receiver enforces.
 # - Must match hyperdx.secrets.HYPERDX_OTLP_FIXED_TOKEN in values/clickstack.yaml.
@@ -68,14 +68,14 @@ deploy-clickstack:
 	  --create-namespace \
 	  --values values/clickstack.yaml
 
-
 .PHONY: o11y-receiver
 o11y-receiver: deploy-stakater-reloader deploy-clickstack
-	@: $${CLOUDFLARED_TUNNEL_TOKEN:?CLOUDFLARED_TUNNEL_TOKEN is not set — export it before running this target}
-	@trap 'rm -f k8s/cloudflared-creds.env' EXIT; \
-	  printf 'TUNNEL_TOKEN=%s\n' "$$CLOUDFLARED_TUNNEL_TOKEN" > k8s/cloudflared-creds.env; \
-	  kubectl --kubeconfig $(KUBECONFIG_SHOOT) apply -f k8s/cloudflared.yaml; \
-	  kubectl --kubeconfig $(KUBECONFIG_SHOOT) create secret generic cloudflared-creds -n cloudflared \
-	    --from-env-file=k8s/cloudflared-creds.env --dry-run=client -o yaml \
-	    | kubectl --kubeconfig $(KUBECONFIG_SHOOT) apply -f -; \
-	  kubectl --kubeconfig $(KUBECONFIG_SHOOT) apply -f k8s/clickstack.yaml
+	@kubectl --kubeconfig $(KUBECONFIG_SHOOT) apply -f k8s/clickstack.yaml
+	# @: $${CLOUDFLARED_TUNNEL_TOKEN:?CLOUDFLARED_TUNNEL_TOKEN is not set — export it before running this target}
+	# @trap 'rm -f k8s/cloudflared-creds.env' EXIT; \
+	#   printf 'TUNNEL_TOKEN=%s\n' "$$CLOUDFLARED_TUNNEL_TOKEN" > k8s/cloudflared-creds.env; \
+	#   kubectl --kubeconfig $(KUBECONFIG_SHOOT) apply -f k8s/cloudflared.yaml; \
+	#   kubectl --kubeconfig $(KUBECONFIG_SHOOT) create secret generic cloudflared-creds -n cloudflared \
+	#     --from-env-file=k8s/cloudflared-creds.env --dry-run=client -o yaml \
+	#     | kubectl --kubeconfig $(KUBECONFIG_SHOOT) apply -f -; \
+	#   kubectl --kubeconfig $(KUBECONFIG_SHOOT) apply -f k8s/clickstack.yaml
