@@ -1,0 +1,15 @@
+---
+apiVersion: opentelemetry.io/v1alpha1
+kind: Instrumentation
+metadata:
+  name: kube-rbac-proxy-setup-auto-instrumentation
+  namespace: experiment
+spec:
+  exporter:
+    endpoint: http://jaeger-inmemory-instance-collector.tracing.svc.cluster.local:4318
+  propagators:
+    - tracecontext
+    - baggage
+  sampler:
+    type: parentbased_traceidratio
+    argument: "1"
