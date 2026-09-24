@@ -44,6 +44,7 @@ global:
         otlp/hyperdx:
           protocols:
             http:
+              endpoint: "0.0.0.0:14318"
               tls:
                 cert_file: /etc/otel/tls/tls.crt
                 key_file: /etc/otel/tls/tls.key
@@ -492,6 +493,11 @@ otel-collector:
       enabled: true
       containerPort: 4318
       servicePort: 4318
+      protocol: TCP
+    otlp-http-tls:
+      enabled: true
+      containerPort: 14318
+      servicePort: 14318
       protocol: TCP
     health-check:
       enabled: true

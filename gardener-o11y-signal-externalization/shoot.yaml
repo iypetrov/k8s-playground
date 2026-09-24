@@ -26,7 +26,7 @@ spec:
                   # the seed AND allow-listed by the shoot's allow-machine-pods
                   # NetworkPolicy. Must match the IP SAN in the server cert
                   # (scripts/generate-certificates.sh).
-                  endpoint: "https://172.18.255.227:4318"
+                  endpoint: "https://172.18.255.227:14318"
                   compression: gzip
                   encoding: proto
                   token:
