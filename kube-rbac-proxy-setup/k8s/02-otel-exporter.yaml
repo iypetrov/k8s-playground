@@ -1,0 +1,101 @@
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: otel-exporter
+  namespace: experiment
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: otel-exporter
+rules:
+- nonResourceURLs: ["/v1/logs"]
+  verbs: ["create"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: otel-exporter
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: otel-exporter
+subjects:
+- kind: ServiceAccount
+  name: otel-exporter
+  namespace: experiment
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: otel-exporter-config
+  namespace: experiment
+data:
+  config.yaml: |
+    receivers:
+      filelog:
+        include: [/logs/gen.log]
+        start_at: end
+
+    exporters:
+      otlphttp:
+        endpoint: https://otel-receiver.experiment.svc.cluster.local:8443
+        tls:
+          insecure_skip_verify: true
+        headers:
+          Authorization: "Bearer ${file:/var/run/secrets/kubernetes.io/serviceaccount/token}"
+
+    service:
+      pipelines:
+        logs/0:
+          receivers: [filelog]
+          exporters: [otlphttp]
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: otel-exporter
+  namespace: experiment
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: otel-exporter
+  template:
+    metadata:
+      labels:
+        app: otel-exporter
+    spec:
+      serviceAccountName: otel-exporter
+      initContainers:
+      - name: log-generator
+        image: busybox
+        restartPolicy: Always
+        command:
+        - /bin/sh
+        - -c
+        - |
+          while true; do
+            echo "$(date -Iseconds) hello from log-generator" >> /logs/gen.log
+            sleep 0.2
+          done
+        volumeMounts:
+        - name: logdir
+          mountPath: /logs
+      containers:
+      - name: otel-collector
+        image: ghcr.io/open-telemetry/opentelemetry-collector-releases/opentelemetry-collector-contrib:0.159.0
+        args:
+          - "--config=/etc/otelcol/config.yaml"
+        volumeMounts:
+          - name: otel-config
+            mountPath: /etc/otelcol
+          - name: logdir
+            mountPath: /logs
+      volumes:
+      - name: logdir
+        emptyDir: {}
+      - name: otel-config
+        configMap:
+          name: otel-exporter-config
