@@ -38,10 +38,10 @@ metadata:
 data:
   config.yaml: |
     receivers:
-      otlp/http:
+      otlp:
         protocols:
-          http:
-            endpoint: 0.0.0.0:4318
+          grpc:
+            endpoint: 0.0.0.0:4317
 
     exporters:
       debug:
@@ -50,7 +50,7 @@ data:
     service:
       pipelines:
         logs/0:
-          receivers: [otlp/http]
+          receivers: [otlp]
           exporters: [debug]
 ---
 apiVersion: apps/v1
@@ -75,12 +75,17 @@ spec:
       - name: kube-rbac-proxy
         image: quay.io/brancz/kube-rbac-proxy:v0.22.1
         args:
-        - "--secure-listen-address=0.0.0.0:8443"
-        - "--upstream=http://localhost:4318/"
+        - "--logtostderr=true"
+        - "--v=6"
+        - "--secure-listen-address=[::]:8443"
+        - "--upstream=http://127.0.0.1:4317/"
+        # The OTLP exporter uses gRPC, which operates over HTTP/2. To support HTTP/2 over cleartext (h2c),
+        # we must explicitly enable h2c in kube-rbac-proxy. By default, kube-rbac-proxy enforces HTTP/2 over TLS
+        # as per the HTTP/2 specification. However, since kube-rbac-proxy forwards to the otel-collector over an unencrypted channel,
+        # h2c support must be enforced when connecting to the upstream.
+        - "--upstream-force-h2c"
         - "--tls-cert-file=/tls/tls.crt"
         - "--tls-private-key-file=/tls/tls.key"
-        - "--logtostderr=true"
-        - "--v=10"
         ports:
         - containerPort: 8443
           name: https
@@ -95,8 +100,8 @@ spec:
         args:
           - "--config=/etc/otelcol/config.yaml"
         ports:
-          - name: otlp-http
-            containerPort: 4318
+          - name: otlp-grpc
+            containerPort: 4317
         volumeMounts:
           - name: otel-config
             mountPath: /etc/otelcol

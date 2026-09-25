@@ -10,7 +10,7 @@ kind: ClusterRole
 metadata:
   name: otel-exporter
 rules:
-- nonResourceURLs: ["/v1/logs"]
+- nonResourceURLs: ["/opentelemetry.proto.collector.logs.v1.LogsService/Export"]
   verbs: ["create"]
 ---
 apiVersion: rbac.authorization.k8s.io/v1
@@ -41,8 +41,8 @@ data:
         start_at: end
 
     exporters:
-      otlphttp:
-        endpoint: https://otel-receiver.experiment.svc.cluster.local:8443
+      otlp:
+        endpoint: otel-receiver.experiment.svc.cluster.local:8443
         tls:
           ca_file: /tls/ca.crt
         headers:
@@ -52,7 +52,7 @@ data:
       pipelines:
         logs/0:
           receivers: [filelog]
-          exporters: [otlphttp]
+          exporters: [otlp]
 ---
 apiVersion: apps/v1
 kind: Deployment
