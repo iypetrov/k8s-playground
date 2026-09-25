@@ -31,6 +31,8 @@ kind: ConfigMap
 metadata:
   name: otel-exporter-config
   namespace: experiment
+  annotations:
+    reloader.stakater.com/match: "true"
 data:
   config.yaml: |
     receivers:
@@ -66,6 +68,8 @@ spec:
     metadata:
       labels:
         app: otel-exporter
+      annotations:
+        reloader.stakater.com/auto: "true"
     spec:
       serviceAccountName: otel-exporter
       initContainers:
