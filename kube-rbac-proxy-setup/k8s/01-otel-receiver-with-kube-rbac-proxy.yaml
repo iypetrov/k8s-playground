@@ -70,6 +70,7 @@ spec:
       annotations:
         reloader.stakater.com/auto: "true"
     spec:
+      shareProcessNamespace: true
       serviceAccountName: kube-rbac-proxy
       initContainers:
       - name: kube-rbac-proxy
@@ -107,6 +108,21 @@ spec:
         volumeMounts:
           - name: otel-config
             mountPath: /etc/otelcol
+      - name: dlv
+        image: golang:1.26.5
+        command:
+        - /bin/sh
+        - -c
+        - |
+          go install github.com/go-delve/delve/cmd/dlv@latest
+          until _PID="$(pgrep kube-rbac-proxy)"; do sleep 1; done
+          exec dlv attach "${_PID}" --headless --listen=:2345 --api-version=2 --accept-multiclient --continue
+        ports:
+        - containerPort: 2345
+          name: dlv
+        securityContext:
+          capabilities:
+            add: ["SYS_PTRACE"]
       volumes:
         - name: otel-config
           configMap:

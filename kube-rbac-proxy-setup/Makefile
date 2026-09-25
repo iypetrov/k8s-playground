@@ -18,8 +18,8 @@ kind-down:
 generate-certificates:
 	@chmod +x scripts/generate-certificates.sh && bash scripts/generate-certificates.sh
 
-.PHONY: k8s-up
-k8s-up:
+.PHONY: deploy
+deploy:
 	@helm repo add stakater https://stakater.github.io/stakater-charts
 	@helm repo update
 	@helm upgrade --install reloader stakater/reloader \
@@ -35,6 +35,11 @@ k8s-up:
 	@kubectl apply -f k8s/01-otel-receiver-with-kube-rbac-proxy.yaml
 	@kubectl apply -f k8s/02-otel-exporter.yaml
 
-.PHONY: delve-kube-rbac-proxy
-delve-kube-rbac-proxy:
-	@sudo dlv attach "$(pgrep -f '/usr/local/bin/kube-rbac-proxy')"
+.PHONY: delve-port-forward
+delve-port-forward:
+	@POD=$$(kubectl -n experiment get pod -l app=otel-receiver -o jsonpath='{.items[0].metadata.name}') && \
+		kubectl -n experiment port-forward "$$POD" 2345:2345
+
+.PHONY: delve
+delve:
+	@dlv connect localhost:2345
