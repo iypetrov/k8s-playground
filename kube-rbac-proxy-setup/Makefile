@@ -43,3 +43,7 @@ delve-port-forward:
 .PHONY: delve
 delve:
 	@dlv connect localhost:2345
+
+.PHONY: kube-apiserver-metrics
+kube-apiserver-metrics:
+	@kubectl get --raw /metrics
