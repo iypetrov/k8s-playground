@@ -77,12 +77,18 @@ spec:
         args:
         - "--secure-listen-address=0.0.0.0:8443"
         - "--upstream=http://localhost:4318/"
+        - "--tls-cert-file=/tls/tls.crt"
+        - "--tls-private-key-file=/tls/tls.key"
         - "--logtostderr=true"
         - "--v=10"
         ports:
         - containerPort: 8443
           name: https
         restartPolicy: Always
+        volumeMounts:
+        - name: tls
+          mountPath: /tls
+          readOnly: true
       containers:
       - name: otel-collector
         image: otel/opentelemetry-collector:latest
@@ -98,6 +104,9 @@ spec:
         - name: otel-config
           configMap:
             name: otel-collector-config
+        - name: tls
+          secret:
+            secretName: otel-receiver-tls
 ---
 apiVersion: v1
 kind: Service

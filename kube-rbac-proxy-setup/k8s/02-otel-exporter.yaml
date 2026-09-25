@@ -42,7 +42,7 @@ data:
       otlphttp:
         endpoint: https://otel-receiver.experiment.svc.cluster.local:8443
         tls:
-          insecure_skip_verify: true
+          ca_file: /tls/ca.crt
         headers:
           Authorization: "Bearer ${file:/var/run/secrets/kubernetes.io/serviceaccount/token}"
 
@@ -93,9 +93,15 @@ spec:
             mountPath: /etc/otelcol
           - name: logdir
             mountPath: /logs
+          - name: tls
+            mountPath: /tls
+            readOnly: true
       volumes:
       - name: logdir
         emptyDir: {}
       - name: otel-config
         configMap:
           name: otel-exporter-config
+      - name: tls
+        secret:
+          secretName: otel-receiver-tls
