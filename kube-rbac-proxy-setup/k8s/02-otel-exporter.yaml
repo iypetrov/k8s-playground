@@ -82,6 +82,7 @@ spec:
         - |
           while true; do
             echo "$(date -Iseconds) hello from log-generator" >> /logs/gen.log
+            sleep 0.2
           done
         volumeMounts:
         - name: logdir
