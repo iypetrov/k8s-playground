@@ -1,0 +1,112 @@
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: kube-rbac-proxy
+  namespace: experiment
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: kube-rbac-proxy
+rules:
+- apiGroups: ["authentication.k8s.io"]
+  resources: ["tokenreviews"]
+  verbs: ["create"]
+- apiGroups: ["authorization.k8s.io"]
+  resources: ["subjectaccessreviews"]
+  verbs: ["create"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: kube-rbac-proxy
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: kube-rbac-proxy
+subjects:
+- kind: ServiceAccount
+  name: kube-rbac-proxy
+  namespace: experiment
+---
+apiVersion: opentelemetry.io/v1alpha1
+kind: OpenTelemetryCollector
+metadata:
+  name: otel-receiver
+  namespace: experiment
+  annotations:
+    reloader.stakater.com/auto: "true"
+spec:
+  serviceAccount: kube-rbac-proxy
+  image: otel/opentelemetry-collector:latest
+  ports:
+  - name: https
+    port: 8443
+  - name: metrics
+    port: 8888
+  # kube-rbac-proxy runs as a native sidecar (init container with restartPolicy: Always).
+  # It terminates TLS and enforces Kubernetes RBAC before forwarding to the collector over h2c.
+  initContainers:
+  - name: kube-rbac-proxy
+    image: quay.io/brancz/kube-rbac-proxy:v0.22.1
+    args:
+    - "--logtostderr=true"
+    - "--v=6"
+    - "--secure-listen-address=[::]:8443"
+    - "--upstream=http://127.0.0.1:4317/"
+    - "--upstream-force-h2c"
+    - "--tls-cert-file=/tls/tls.crt"
+    - "--tls-private-key-file=/tls/tls.key"
+    - "--kube-api-qps=1"
+    - "--kube-api-burst=1"
+    ports:
+    - containerPort: 8443
+      name: https
+    restartPolicy: Always
+    volumeMounts:
+    - name: tls
+      mountPath: /tls
+      readOnly: true
+  volumes:
+  - name: tls
+    secret:
+      secretName: otel-receiver-tls
+  config: |
+    receivers:
+      otlp:
+        protocols:
+          grpc:
+            endpoint: 0.0.0.0:4317
+
+    exporters:
+      debug:
+        verbosity: detailed
+
+    service:
+      telemetry:
+        metrics:
+          readers:
+          - pull:
+              exporter:
+                prometheus:
+                  host: 0.0.0.0
+                  port: 8888
+      pipelines:
+        logs/0:
+          receivers: [otlp]
+          exporters: [debug]
+---
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: otel-receiver
+  namespace: experiment
+spec:
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: otel-receiver-collector
+  endpoints:
+  - port: metrics
+    path: /metrics
+    interval: 30s

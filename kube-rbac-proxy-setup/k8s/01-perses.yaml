@@ -1,0 +1,158 @@
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: perses
+---
+apiVersion: perses.dev/v1alpha2
+kind: Perses
+metadata:
+  name: perses
+  namespace: perses
+spec:
+  config:
+    database:
+      file:
+        folder: /perses
+        extension: yaml
+---
+apiVersion: perses.dev/v1alpha2
+kind: PersesDatasource
+metadata:
+  name: prometheus
+  namespace: perses
+spec:
+  config:
+    default: true
+    display:
+      name: Prometheus
+    plugin:
+      kind: PrometheusDatasource
+      spec:
+        proxy:
+          kind: HTTPProxy
+          spec:
+            url: http://prometheus.monitoring.svc.cluster.local:9090
+---
+apiVersion: perses.dev/v1alpha2
+kind: PersesDashboard
+metadata:
+  name: otel-pipeline
+  namespace: perses
+spec:
+  config:
+    display:
+      name: OTel Pipeline
+      description: OpenTelemetry collector pipeline metrics for the experiment namespace
+    duration: 1h
+    panels:
+      exporterSentRate:
+        kind: Panel
+        spec:
+          display:
+            name: Sent (logs/s)
+          plugin:
+            kind: TimeSeriesChart
+            spec:
+              yAxis:
+                format:
+                  unit: decimal
+                  shortValues: true
+          queries:
+          - kind: TimeSeriesQuery
+            spec:
+              plugin:
+                kind: PrometheusTimeSeriesQuery
+                spec:
+                  seriesNameFormat: "{{pod}}"
+                  query: rate(otelcol_exporter_sent_log_records{job="otel-exporter-collector"}[5m])
+      exporterQueueSize:
+        kind: Panel
+        spec:
+          display:
+            name: Queue Size
+          plugin:
+            kind: TimeSeriesChart
+            spec:
+              yAxis:
+                format:
+                  unit: decimal
+          queries:
+          - kind: TimeSeriesQuery
+            spec:
+              plugin:
+                kind: PrometheusTimeSeriesQuery
+                spec:
+                  seriesNameFormat: "{{pod}}"
+                  query: otelcol_exporter_queue_size{job="otel-exporter-collector"}
+      exporterQueueCapacity:
+        kind: Panel
+        spec:
+          display:
+            name: Queue Capacity
+          plugin:
+            kind: TimeSeriesChart
+            spec:
+              yAxis:
+                format:
+                  unit: decimal
+          queries:
+          - kind: TimeSeriesQuery
+            spec:
+              plugin:
+                kind: PrometheusTimeSeriesQuery
+                spec:
+                  seriesNameFormat: "{{pod}}"
+                  query: otelcol_exporter_queue_capacity{job="otel-exporter-collector"}
+      exporterInFlight:
+        kind: Panel
+        spec:
+          display:
+            name: In-Flight Requests
+          plugin:
+            kind: TimeSeriesChart
+            spec:
+              yAxis:
+                format:
+                  unit: decimal
+          queries:
+          - kind: TimeSeriesQuery
+            spec:
+              plugin:
+                kind: PrometheusTimeSeriesQuery
+                spec:
+                  seriesNameFormat: "{{pod}}"
+                  query: otelcol_exporter_in_flight_requests{job="otel-exporter-collector"}
+
+    layouts:
+    - kind: Grid
+      spec:
+        display:
+          title: Exporter
+          collapse:
+            open: true
+        items:
+        - x: 0
+          y: 0
+          width: 12
+          height: 6
+          content:
+            $ref: '#/spec/panels/exporterSentRate'
+        - x: 12
+          y: 0
+          width: 12
+          height: 6
+          content:
+            $ref: '#/spec/panels/exporterInFlight'
+        - x: 0
+          y: 10
+          width: 12
+          height: 6
+          content:
+            $ref: '#/spec/panels/exporterQueueSize'
+        - x: 12
+          y: 10
+          width: 12
+          height: 6
+          content:
+            $ref: '#/spec/panels/exporterQueueCapacity'
