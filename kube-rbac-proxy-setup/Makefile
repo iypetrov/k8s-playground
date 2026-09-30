@@ -35,9 +35,19 @@ deploy:
 	@kubectl apply -f k8s/01-otel-receiver-with-kube-rbac-proxy.yaml
 	@kubectl apply -f k8s/02-otel-exporter.yaml
 
-.PHONY: delve-port-forward
-delve-port-forward:
+.PHONY: delve-setup
+delve-setup:
 	@POD=$$(kubectl -n experiment get pod -l app=otel-receiver -o jsonpath='{.items[0].metadata.name}') && \
+		kubectl -n experiment debug -it "$$POD" \
+			--image=golang:1.24 \
+			--target=kube-rbac-proxy \
+			--share-processes \
+			-- /bin/sh -c ' \
+				go install github.com/go-delve/delve/cmd/dlv@latest && \
+				until _PID="$$(pgrep kube-rbac-proxy)"; do sleep 1; done && \
+				exec dlv attach "$$_PID" --headless --listen=:2345 --api-version=2 --accept-multiclient --continue \
+			' & \
+		sleep 5 && \
 		kubectl -n experiment port-forward "$$POD" 2345:2345
 
 .PHONY: delve
