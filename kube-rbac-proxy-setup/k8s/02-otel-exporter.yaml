@@ -74,14 +74,12 @@ spec:
       serviceAccountName: otel-exporter
       initContainers:
       - name: log-generator
-        image: mingrammer/flog
+        image: lscr.io/linuxserver/syslog-ng:latest
         restartPolicy: Always
-        args:
-        - -f=json     # log format: apache_common | apache_combined | apache_error | rfc3164 | rfc5424 | json
-        - -t=log      # output type: stdout | log (file)
-        - -o=/logs/gen.log
-        - -r=10       # logs per second
-        - -l          # loop indefinitely
+        command:
+        - /bin/sh
+        - -c
+        - loggen --inet --stream --rate=500 --number=100000 --size=256 localhost 514 && sleep infinity
         volumeMounts:
         - name: logdir
           mountPath: /logs
