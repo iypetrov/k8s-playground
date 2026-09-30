@@ -25,6 +25,19 @@ deploy:
 	@helm upgrade --install reloader stakater/reloader \
 		--namespace reloader \
 		--create-namespace
+	@helm upgrade \
+		--install \
+		cert-manager oci://quay.io/jetstack/charts/cert-manager \
+		--version v1.21.2 \
+		--namespace cert-manager \
+		--create-namespace \
+		--set crds.enabled=true \
+		--wait
+	@kubectl create -f https://raw.githubusercontent.com/prometheus-operator/prometheus-operator/refs/heads/main/bundle.yaml || true
+	@kubectl rollout status deployment/prometheus-operator -n default --timeout=120s
+	@helm repo add perses https://perses.github.io/helm-charts
+	@helm repo update
+	@helm upgrade --install perses-operator perses/perses-operator --wait --create-namespace
 	@kubectl apply -f k8s/00-namespace.yaml
 	@kubectl --namespace experiment \
 		create secret generic otel-receiver-tls \
