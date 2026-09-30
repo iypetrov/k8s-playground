@@ -74,16 +74,14 @@ spec:
       serviceAccountName: otel-exporter
       initContainers:
       - name: log-generator
-        image: busybox
+        image: mingrammer/flog
         restartPolicy: Always
-        command:
-        - /bin/sh
-        - -c
-        - |
-          while true; do
-            echo "$(date -Iseconds) hello from log-generator" >> /logs/gen.log
-            sleep 0.2
-          done
+        args:
+        - -f=json     # log format: apache_common | apache_combined | apache_error | rfc3164 | rfc5424 | json
+        - -t=log      # output type: stdout | log (file)
+        - -o=/logs/gen.log
+        - -r=10       # logs per second
+        - -l          # loop indefinitely
         volumeMounts:
         - name: logdir
           mountPath: /logs
