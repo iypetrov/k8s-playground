@@ -45,11 +45,13 @@ spec:
     port: 8443
   - name: metrics
     port: 8888
+  - name: proxy-metrics
+    port: 6969
   # kube-rbac-proxy runs as a native sidecar (init container with restartPolicy: Always).
   # It terminates TLS and enforces Kubernetes RBAC before forwarding to the collector over h2c.
   initContainers:
   - name: kube-rbac-proxy
-    image: quay.io/brancz/kube-rbac-proxy:v0.22.1
+    image: iypetrov/kube-rbac-proxy:v0.22.1-7cf01726-arm64
     args:
     - "--logtostderr=true"
     - "--v=6"
@@ -63,6 +65,8 @@ spec:
     ports:
     - containerPort: 8443
       name: https
+    - containerPort: 6969
+      name: proxy-metrics
     restartPolicy: Always
     volumeMounts:
     - name: tls
@@ -109,5 +113,20 @@ spec:
       operator.opentelemetry.io/collector-service-type: base
   endpoints:
   - port: metrics
+    path: /metrics
+    interval: 5s
+---
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: kube-rbac-proxy
+  namespace: experiment
+spec:
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: otel-receiver-collector
+      operator.opentelemetry.io/collector-service-type: base
+  endpoints:
+  - port: proxy-metrics
     path: /metrics
     interval: 5s
