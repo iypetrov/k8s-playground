@@ -75,3 +75,17 @@ spec:
       tls on
       tls.verify on
       tls.ca_file /fluent-bit/secrets/otel-receiver-tls/ca.crt
+---
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: fluent-bit
+  namespace: fluent
+spec:
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: fluent-bit
+  endpoints:
+  - port: metrics
+    path: /api/v1/metrics/prometheus
+    interval: 30s

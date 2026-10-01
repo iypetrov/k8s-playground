@@ -46,11 +46,11 @@ spec:
       description: OpenTelemetry collector pipeline metrics for the experiment namespace
     duration: 1h
     panels:
-      exporterSentRate:
+      fluentbitOutputSentRate:
         kind: Panel
         spec:
           display:
-            name: Sent (logs/s)
+            name: Sent (records/s)
           plugin:
             kind: TimeSeriesChart
             spec:
@@ -64,13 +64,13 @@ spec:
               plugin:
                 kind: PrometheusTimeSeriesQuery
                 spec:
-                  seriesNameFormat: "{{pod}}"
-                  query: rate(otelcol_exporter_sent_log_records{job="otel-exporter-collector"}[5m])
-      exporterQueueSize:
+                  seriesNameFormat: "{{name}}"
+                  query: rate(fluentbit_output_proc_records_total{name=~"opentelemetry.*"}[5m])
+      fluentbitOutputErrors:
         kind: Panel
         spec:
           display:
-            name: Queue Size
+            name: Output Errors (/s)
           plugin:
             kind: TimeSeriesChart
             spec:
@@ -83,13 +83,13 @@ spec:
               plugin:
                 kind: PrometheusTimeSeriesQuery
                 spec:
-                  seriesNameFormat: "{{pod}}"
-                  query: otelcol_exporter_queue_size{job="otel-exporter-collector"}
-      exporterQueueCapacity:
+                  seriesNameFormat: "{{name}}"
+                  query: rate(fluentbit_output_errors_total{name=~"opentelemetry.*"}[5m])
+      fluentbitOutputRetries:
         kind: Panel
         spec:
           display:
-            name: Queue Capacity
+            name: Retries (/s)
           plugin:
             kind: TimeSeriesChart
             spec:
@@ -102,13 +102,13 @@ spec:
               plugin:
                 kind: PrometheusTimeSeriesQuery
                 spec:
-                  seriesNameFormat: "{{pod}}"
-                  query: otelcol_exporter_queue_capacity{job="otel-exporter-collector"}
-      exporterInFlight:
+                  seriesNameFormat: "{{name}}"
+                  query: rate(fluentbit_output_retries_total{name=~"opentelemetry.*"}[5m])
+      fluentbitOutputDropped:
         kind: Panel
         spec:
           display:
-            name: In-Flight Requests
+            name: Dropped Records (/s)
           plugin:
             kind: TimeSeriesChart
             spec:
@@ -121,14 +121,14 @@ spec:
               plugin:
                 kind: PrometheusTimeSeriesQuery
                 spec:
-                  seriesNameFormat: "{{pod}}"
-                  query: otelcol_exporter_in_flight_requests{job="otel-exporter-collector"}
+                  seriesNameFormat: "{{name}}"
+                  query: rate(fluentbit_output_dropped_records_total{name=~"opentelemetry.*"}[5m])
 
     layouts:
     - kind: Grid
       spec:
         display:
-          title: Exporter
+          title: Fluent Bit Exporter
           collapse:
             open: true
         items:
@@ -137,22 +137,22 @@ spec:
           width: 12
           height: 6
           content:
-            $ref: '#/spec/panels/exporterSentRate'
+            $ref: '#/spec/panels/fluentbitOutputSentRate'
         - x: 12
           y: 0
           width: 12
           height: 6
           content:
-            $ref: '#/spec/panels/exporterInFlight'
+            $ref: '#/spec/panels/fluentbitOutputErrors'
         - x: 0
-          y: 10
+          y: 6
           width: 12
           height: 6
           content:
-            $ref: '#/spec/panels/exporterQueueSize'
+            $ref: '#/spec/panels/fluentbitOutputRetries'
         - x: 12
-          y: 10
+          y: 6
           width: 12
           height: 6
           content:
-            $ref: '#/spec/panels/exporterQueueCapacity'
+            $ref: '#/spec/panels/fluentbitOutputDropped'
