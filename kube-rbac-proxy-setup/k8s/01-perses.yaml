@@ -64,7 +64,7 @@ spec:
               plugin:
                 kind: PrometheusTimeSeriesQuery
                 spec:
-                  seriesNameFormat: "{{name}}"
+                  seriesNameFormat: "{{pod}}"
                   query: rate(fluentbit_output_proc_records_total{name=~"opentelemetry.*"}[5m])
       fluentbitOutputErrors:
         kind: Panel
@@ -83,7 +83,7 @@ spec:
               plugin:
                 kind: PrometheusTimeSeriesQuery
                 spec:
-                  seriesNameFormat: "{{name}}"
+                  seriesNameFormat: "{{pod}}"
                   query: rate(fluentbit_output_errors_total{name=~"opentelemetry.*"}[5m])
       fluentbitOutputRetries:
         kind: Panel
@@ -102,7 +102,7 @@ spec:
               plugin:
                 kind: PrometheusTimeSeriesQuery
                 spec:
-                  seriesNameFormat: "{{name}}"
+                  seriesNameFormat: "{{pod}}"
                   query: rate(fluentbit_output_retries_total{name=~"opentelemetry.*"}[5m])
       fluentbitOutputDropped:
         kind: Panel
@@ -121,7 +121,7 @@ spec:
               plugin:
                 kind: PrometheusTimeSeriesQuery
                 spec:
-                  seriesNameFormat: "{{name}}"
+                  seriesNameFormat: "{{pod}}"
                   query: rate(fluentbit_output_dropped_records_total{name=~"opentelemetry.*"}[5m])
       receiverAcceptedRate:
         kind: Panel
