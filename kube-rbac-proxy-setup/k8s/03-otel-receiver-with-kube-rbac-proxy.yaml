@@ -106,6 +106,7 @@ spec:
   selector:
     matchLabels:
       app.kubernetes.io/name: otel-receiver-collector
+      operator.opentelemetry.io/collector-service-type: base
   endpoints:
   - port: metrics
     path: /metrics
