@@ -51,7 +51,7 @@ spec:
   # It terminates TLS and enforces Kubernetes RBAC before forwarding to the collector over h2c.
   initContainers:
   - name: kube-rbac-proxy
-    image: iypetrov/kube-rbac-proxy:v0.22.1-7cf01726-arm64
+    image: iypetrov/kube-rbac-proxy:v0.22.1-5381098e-arm64
     args:
     - "--logtostderr=true"
     - "--v=6"
