@@ -40,8 +40,12 @@ deploy:
 	@helm upgrade --install perses-operator perses/perses-operator --wait --create-namespace
 	@kubectl apply -f https://github.com/open-telemetry/opentelemetry-operator/releases/latest/download/opentelemetry-operator.yaml
 	@kubectl rollout status deployment/opentelemetry-operator-controller-manager -n opentelemetry-operator-system --timeout=120s
+	@kubectl wait --for=condition=ready pod -l app.kubernetes.io/name=opentelemetry-operator -n opentelemetry-operator-system --timeout=60s
 	@kubectl apply -f k8s/00-prometheus.yaml
 	@kubectl apply -f k8s/01-perses.yaml
+	@helm repo add fluent https://fluent.github.io/helm-charts
+	@helm repo update
+	@helm upgrade --install fluent-operator fluent/fluent-operator --create-namespace -n fluent --wait
 	@echo "Setup the experimental pipeline with kube-rbac-proxy..."
 	@kubectl apply -f k8s/02-namespace.yaml
 	@kubectl --namespace experiment \
@@ -51,7 +55,14 @@ deploy:
 		--from-file=ca.crt=$(CERT_DIR)/ca.crt \
 		--dry-run=client -o yaml | kubectl apply -f -
 	@kubectl apply -f k8s/03-otel-receiver-with-kube-rbac-proxy.yaml
-	@kubectl apply -f k8s/04-otel-exporter.yaml
+	@# fluent-operator mounts secrets from the FluentBit CR's namespace (fluent), so the CA must exist there too
+	@kubectl --namespace fluent \
+		create secret generic otel-receiver-tls \
+		--from-file=tls.crt=$(CERT_DIR)/server.crt \
+		--from-file=tls.key=$(CERT_DIR)/server.key \
+		--from-file=ca.crt=$(CERT_DIR)/ca.crt \
+		--dry-run=client -o yaml | kubectl apply -f -
+	@kubectl apply -f k8s/04-fluent-bit-exporter.yaml
 
 .PHONY: delve-setup
 delve-setup:

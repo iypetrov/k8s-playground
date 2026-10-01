@@ -1,0 +1,77 @@
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: fluent-bit-otel-exporter
+rules:
+- nonResourceURLs: ["/opentelemetry.proto.collector.logs.v1.LogsService/Export"]
+  verbs: ["create"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: fluent-bit-otel-exporter
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: fluent-bit-otel-exporter
+subjects:
+- kind: ServiceAccount
+  name: fluent-bit
+  namespace: fluent
+---
+apiVersion: v1
+kind: Secret
+type: kubernetes.io/service-account-token
+metadata:
+  name: fluent-bit-token
+  namespace: fluent
+  annotations:
+    kubernetes.io/service-account.name: fluent-bit
+---
+apiVersion: fluentbit.fluent.io/v1alpha2
+kind: FluentBit
+metadata:
+  name: fluent-bit
+  namespace: fluent
+spec:
+  secrets:
+  - otel-receiver-tls
+  envVars:
+  - name: K8S_TOKEN
+    valueFrom:
+      secretKeyRef:
+        name: fluent-bit-token
+        key: token
+---
+apiVersion: fluentbit.fluent.io/v1alpha2
+kind: ClusterInput
+metadata:
+  name: otel-exporter-dummy
+  labels:
+    fluentbit.fluent.io/enabled: "true"
+spec:
+  dummy:
+    tag: experiment.logs
+    dummy: '{"level":"info","message":"sample log line","source":"fluent-bit-dummy"}'
+    rate: 1
+---
+apiVersion: fluentbit.fluent.io/v1alpha2
+kind: ClusterOutput
+metadata:
+  name: otel-exporter-otlp
+  labels:
+    fluentbit.fluent.io/enabled: "true"
+spec:
+  match: experiment.logs
+  customPlugin:
+    config: |
+      Name opentelemetry
+      Host otel-receiver-collector.experiment.svc.cluster.local
+      Port 8443
+      Grpc on
+      Logs_uri /opentelemetry.proto.collector.logs.v1.LogsService/Export
+      Header Authorization Bearer ${K8S_TOKEN}
+      tls on
+      tls.verify on
+      tls.ca_file /fluent-bit/secrets/otel-receiver-tls/ca.crt
