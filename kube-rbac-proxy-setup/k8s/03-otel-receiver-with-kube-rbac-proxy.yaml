@@ -72,6 +72,22 @@ spec:
     - name: tls
       mountPath: /tls
       readOnly: true
+  - name: dlv
+    image: golang:1.26.5
+    command:
+    - /bin/sh
+    - -c
+    - |
+      go install github.com/go-delve/delve/cmd/dlv@latest
+      until _PID="$(pgrep kube-rbac-proxy)"; do sleep 1; done
+      exec dlv attach "${_PID}" --headless --listen=:2345 --api-version=2 --accept-multiclient --continue
+    ports:
+    - containerPort: 2345
+      name: dlv
+    securityContext:
+      capabilities:
+        add: ["SYS_PTRACE"]
+    restartPolicy: Always
   volumes:
   - name: tls
     secret:

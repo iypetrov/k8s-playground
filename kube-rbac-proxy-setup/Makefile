@@ -64,21 +64,39 @@ deploy:
 		--dry-run=client -o yaml | kubectl apply -f -
 	@kubectl apply -f k8s/04-fluent-bit-exporter.yaml
 
-.PHONY: delve-setup
-delve-setup:
-	@POD=$$(kubectl -n experiment get pod -l app=otel-receiver -o jsonpath='{.items[0].metadata.name}'); \
-	kubectl -n experiment debug "$$POD" \
-		--image=golang:1.24 \
-		--target=kube-rbac-proxy \
-		--share-processes \
-		-- /bin/sh -c \
-		'go install github.com/go-delve/delve/cmd/dlv@latest; until _PID=$$(pgrep kube-rbac-proxy); do sleep 1; done; exec dlv attach "$$_PID" --headless --listen=:2345 --api-version=2 --accept-multiclient --continue' & \
-	echo "Waiting for dlv to be ready..."; \
-	until kubectl -n experiment port-forward "$$POD" 2345:2345 2>/dev/null; do sleep 2; done
+.PHONY: port-forward-up
+port-forward-up:
+	@kubectl port-forward -n perses svc/perses 8080:8080 &
+	@kubectl port-forward -n monitoring svc/prometheus 9090:9090 &
+	@kubectl port-forward -n experiment svc/otel-receiver-collector 6969:6969 &
+	@kubectl port-forward -n experiment svc/otel-receiver-collector 2345:2345 &
+
+.PHONY: port-forward-down
+port-forward-down:
+	@lsof -ti :8080 | xargs kill -9
+	@lsof -ti :9090 | xargs kill -9
+	@lsof -ti :6960 | xargs kill -9
+	@lsof -ti :2340 | xargs kill -9
 
 .PHONY: delve
 delve:
 	@dlv connect localhost:2345
+
+.PHONY: metrics
+metrics:
+	@curl localhost:6969/metrics
+
+.PHONY: pprof
+pprof:
+	@go tool pprof -http=:3000 http://localhost:6969/debug/pprof/profile?seconds=30
+
+.PHONY: controlplane-start
+controlplane-start:
+	@docker start kind-control-plane
+
+.PHONY: controlplane-stop
+controlplane-start:
+	@docker stop kind-control-plane
 
 .PHONY: kube-apiserver-metrics
 kube-apiserver-metrics:
