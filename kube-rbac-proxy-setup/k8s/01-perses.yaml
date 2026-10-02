@@ -77,6 +77,7 @@ spec:
               yAxis:
                 format:
                   unit: decimal
+                  shortValues: true
           queries:
           - kind: TimeSeriesQuery
             spec:
@@ -96,6 +97,7 @@ spec:
               yAxis:
                 format:
                   unit: decimal
+                  shortValues: true
           queries:
           - kind: TimeSeriesQuery
             spec:
@@ -115,6 +117,7 @@ spec:
               yAxis:
                 format:
                   unit: decimal
+                  shortValues: true
           queries:
           - kind: TimeSeriesQuery
             spec:
@@ -194,6 +197,7 @@ spec:
               yAxis:
                 format:
                   unit: decimal
+                  shortValues: true
           queries:
           - kind: TimeSeriesQuery
             spec:
@@ -233,6 +237,7 @@ spec:
               yAxis:
                 format:
                   unit: decimal
+                  shortValues: true
           queries:
           - kind: TimeSeriesQuery
             spec:
@@ -252,6 +257,7 @@ spec:
               yAxis:
                 format:
                   unit: decimal
+                  shortValues: true
           queries:
           - kind: TimeSeriesQuery
             spec:
