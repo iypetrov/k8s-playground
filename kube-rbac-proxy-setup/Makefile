@@ -92,11 +92,11 @@ pprof:
 
 .PHONY: controlplane-start
 controlplane-start:
-	@docker start kind-control-plane
+	@docker start kube-rbac-proxy-setup-control-plane
 
 .PHONY: controlplane-stop
-controlplane-start:
-	@docker stop kind-control-plane
+controlplane-stop:
+	@docker stop kube-rbac-proxy-setup-control-plane
 
 .PHONY: kube-apiserver-metrics
 kube-apiserver-metrics:
