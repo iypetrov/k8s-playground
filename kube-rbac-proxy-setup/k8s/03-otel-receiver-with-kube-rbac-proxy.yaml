@@ -47,6 +47,8 @@ spec:
     port: 8888
   - name: proxy-metrics
     port: 6969
+  - name: dlv
+    port: 2345
   # kube-rbac-proxy runs as a native sidecar (init container with restartPolicy: Always).
   # It terminates TLS and enforces Kubernetes RBAC before forwarding to the collector over h2c.
   initContainers:
