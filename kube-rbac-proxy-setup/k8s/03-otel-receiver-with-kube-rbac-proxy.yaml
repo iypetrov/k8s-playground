@@ -60,8 +60,8 @@ spec:
     - "--upstream-force-h2c"
     - "--tls-cert-file=/tls/tls.crt"
     - "--tls-private-key-file=/tls/tls.key"
-    - "--kube-api-qps=1"
-    - "--kube-api-burst=1"
+    - "--kube-api-qps=100"
+    - "--kube-api-burst=100"
     ports:
     - containerPort: 8443
       name: https
