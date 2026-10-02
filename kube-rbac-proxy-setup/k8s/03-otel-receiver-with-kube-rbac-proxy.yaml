@@ -40,6 +40,7 @@ metadata:
 spec:
   serviceAccount: kube-rbac-proxy
   image: otel/opentelemetry-collector:latest
+  imagePullPolicy: IfNotPresent
   ports:
   - name: https
     port: 8443
@@ -54,6 +55,7 @@ spec:
   initContainers:
   - name: kube-rbac-proxy
     image: iypetrov/kube-rbac-proxy:v0.22.1-5381098e-arm64
+    imagePullPolicy: IfNotPresent
     args:
     - "--logtostderr=true"
     - "--v=6"
@@ -76,6 +78,7 @@ spec:
       readOnly: true
   - name: dlv
     image: golang:1.26.5
+    imagePullPolicy: IfNotPresent
     command:
     - /bin/sh
     - -c
