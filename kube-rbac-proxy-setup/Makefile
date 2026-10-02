@@ -66,17 +66,17 @@ deploy:
 
 .PHONY: port-forward-up
 port-forward-up:
-	@kubectl port-forward -n perses svc/perses 8080:8080 &
-	@kubectl port-forward -n monitoring svc/prometheus 9090:9090 &
-	@kubectl port-forward -n experiment svc/otel-receiver-collector 6969:6969 &
-	@kubectl port-forward -n experiment svc/otel-receiver-collector 2345:2345 &
+	@kubectl port-forward -n perses svc/perses 8080:8080 </dev/null >/tmp/perses.log 2>&1 &
+	@kubectl port-forward -n monitoring svc/prometheus 9090:9090 </dev/null >/tmp/prometheus.log 2>&1 &
+	@kubectl port-forward -n experiment svc/otel-receiver-collector 6969:6969 </dev/null >/tmp/otel-6969.log 2>&1 &
+	@kubectl port-forward -n experiment svc/otel-receiver-collector 2345:2345 </dev/null >/tmp/otel-2345.log 2>&1 &
 
 .PHONY: port-forward-down
 port-forward-down:
-	@lsof -ti :8080 | xargs kill -9
-	@lsof -ti :9090 | xargs kill -9
-	@lsof -ti :6960 | xargs kill -9
-	@lsof -ti :2340 | xargs kill -9
+	@lsof -ti :8080 | xargs -r kill -9 || true
+	@lsof -ti :9090 | xargs -r kill -9 || true
+	@lsof -ti :6969 | xargs -r kill -9 || true
+	@lsof -ti :2345 | xargs -r kill -9 || true
 
 .PHONY: delve
 delve:
