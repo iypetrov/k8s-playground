@@ -86,9 +86,17 @@ delve:
 metrics:
 	@curl localhost:6969/metrics
 
-.PHONY: pprof
-pprof:
+.PHONY: pprof-cpu
+pprof-cpu:
 	@go tool pprof -http=:3000 http://localhost:6969/debug/pprof/profile?seconds=30
+
+.PHONY: pprof-heap
+pprof-heap:
+	@go tool pprof -http=:3000 http://localhost:6969/debug/pprof/heap?seconds=30&gc=1
+
+.PHONY: pprof-goroutine
+pprof-goroutine:
+	@go tool pprof -http=:3000 http://localhost:6969/debug/pprof/goroutine?seconds=30
 
 .PHONY: controlplane-start
 controlplane-start:
