@@ -54,7 +54,7 @@ spec:
   dummy:
     tag: experiment.logs
     dummy: '{"level":"info","message":"sample log line","source":"fluent-bit-dummy"}'
-    rate: 1
+    rate: 10
 ---
 apiVersion: fluentbit.fluent.io/v1alpha2
 kind: ClusterOutput
