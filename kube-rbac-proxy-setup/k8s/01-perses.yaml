@@ -126,17 +126,17 @@ spec:
                 spec:
                   seriesNameFormat: "{{pod}}"
                   query: rate(fluentbit_output_dropped_records_total{name=~"opentelemetry.*"}[5m])
-      kubeRbacProxyNetworkReceive:
+      kubeRbacProxyRateLimiterWait:
         kind: Panel
         spec:
           display:
-            name: Network Received (bytes/s)
+            name: Rate Limiter Wait (p50/p99)
           plugin:
             kind: TimeSeriesChart
             spec:
               yAxis:
                 format:
-                  unit: bytes/sec
+                  unit: decimal
                   shortValues: true
           queries:
           - kind: TimeSeriesQuery
@@ -144,19 +144,26 @@ spec:
               plugin:
                 kind: PrometheusTimeSeriesQuery
                 spec:
-                  seriesNameFormat: "{{pod}}"
-                  query: rate(process_network_receive_bytes_total{instance=~".*:6969"}[5m])
-      kubeRbacProxyNetworkTransmit:
+                  seriesNameFormat: "p50"
+                  query: histogram_quantile(0.5, rate(rest_client_rate_limiter_duration_seconds_bucket{instance=~".*:6969"}[5m]))
+          - kind: TimeSeriesQuery
+            spec:
+              plugin:
+                kind: PrometheusTimeSeriesQuery
+                spec:
+                  seriesNameFormat: "p99"
+                  query: histogram_quantile(0.99, rate(rest_client_rate_limiter_duration_seconds_bucket{instance=~".*:6969"}[5m]))
+      kubeRbacProxyAPIServerLatency:
         kind: Panel
         spec:
           display:
-            name: Network Transmitted (bytes/s)
+            name: API Server Round-Trip Latency (p50/p99)
           plugin:
             kind: TimeSeriesChart
             spec:
               yAxis:
                 format:
-                  unit: bytes/sec
+                  unit: decimal
                   shortValues: true
           queries:
           - kind: TimeSeriesQuery
@@ -164,19 +171,26 @@ spec:
               plugin:
                 kind: PrometheusTimeSeriesQuery
                 spec:
-                  seriesNameFormat: "{{pod}}"
-                  query: rate(process_network_transmit_bytes_total{instance=~".*:6969"}[5m])
-      kubeRbacProxyMemory:
+                  seriesNameFormat: "p50"
+                  query: histogram_quantile(0.5, rate(rest_client_request_duration_seconds_bucket{instance=~".*:6969"}[5m]))
+          - kind: TimeSeriesQuery
+            spec:
+              plugin:
+                kind: PrometheusTimeSeriesQuery
+                spec:
+                  seriesNameFormat: "p99"
+                  query: histogram_quantile(0.99, rate(rest_client_request_duration_seconds_bucket{instance=~".*:6969"}[5m]))
+      kubeRbacProxyAuthnRate:
         kind: Panel
         spec:
           display:
-            name: Memory (RSS)
+            name: Authn Requests to API Server (/s)
           plugin:
             kind: TimeSeriesChart
             spec:
               yAxis:
                 format:
-                  unit: bytes
+                  unit: decimal
                   shortValues: true
           queries:
           - kind: TimeSeriesQuery
@@ -184,8 +198,334 @@ spec:
               plugin:
                 kind: PrometheusTimeSeriesQuery
                 spec:
-                  seriesNameFormat: "{{pod}}"
+                  seriesNameFormat: "{{code}}"
+                  query: rate(apiserver_delegated_authn_request_total{instance=~".*:6969"}[5m])
+      kubeRbacProxyAuthzRate:
+        kind: Panel
+        spec:
+          display:
+            name: Authz Requests to API Server (/s)
+          plugin:
+            kind: TimeSeriesChart
+            spec:
+              yAxis:
+                format:
+                  unit: decimal
+                  shortValues: true
+          queries:
+          - kind: TimeSeriesQuery
+            spec:
+              plugin:
+                kind: PrometheusTimeSeriesQuery
+                spec:
+                  seriesNameFormat: "{{code}}"
+                  query: rate(apiserver_delegated_authz_request_total{instance=~".*:6969"}[5m])
+      kubeRbacProxyTokenCacheHitRate:
+        kind: Panel
+        spec:
+          display:
+            name: Token Cache Hit Rate (0-1)
+          plugin:
+            kind: TimeSeriesChart
+            spec:
+              yAxis:
+                format:
+                  unit: decimal
+                  shortValues: true
+          queries:
+          - kind: TimeSeriesQuery
+            spec:
+              plugin:
+                kind: PrometheusTimeSeriesQuery
+                spec:
+                  seriesNameFormat: "hit rate"
+                  query: |
+                    rate(authentication_token_cache_request_total{instance=~".*:6969",status="hit"}[5m])
+                    / on(instance) group_left()
+                    (rate(authentication_token_cache_request_total{instance=~".*:6969",status="hit"}[5m]) + (rate(authentication_token_cache_request_total{instance=~".*:6969",status="miss"}[5m]) or on(instance) (0 * rate(authentication_token_cache_request_total{instance=~".*:6969",status="hit"}[5m]))))
+      kubeRbacProxyTokenCacheBlocked:
+        kind: Panel
+        spec:
+          display:
+            name: Token Cache Blocked Fetches
+          plugin:
+            kind: TimeSeriesChart
+            spec:
+              yAxis:
+                format:
+                  unit: decimal
+                  shortValues: true
+          queries:
+          - kind: TimeSeriesQuery
+            spec:
+              plugin:
+                kind: PrometheusTimeSeriesQuery
+                spec:
+                  seriesNameFormat: "blocked"
+                  query: authentication_token_cache_active_fetch_count{instance=~".*:6969",status="blocked"}
+          - kind: TimeSeriesQuery
+            spec:
+              plugin:
+                kind: PrometheusTimeSeriesQuery
+                spec:
+                  seriesNameFormat: "in_flight"
+                  query: authentication_token_cache_active_fetch_count{instance=~".*:6969",status="in_flight"}
+      kubeRbacProxyAuthnLatency:
+        kind: Panel
+        spec:
+          display:
+            name: Authn Latency (p50/p99, seconds)
+          plugin:
+            kind: TimeSeriesChart
+            spec:
+              yAxis:
+                format:
+                  unit: decimal
+                  shortValues: true
+          queries:
+          - kind: TimeSeriesQuery
+            spec:
+              plugin:
+                kind: PrometheusTimeSeriesQuery
+                spec:
+                  seriesNameFormat: "p50"
+                  query: histogram_quantile(0.5, rate(apiserver_delegated_authn_request_duration_seconds_bucket{instance=~".*:6969"}[5m]))
+          - kind: TimeSeriesQuery
+            spec:
+              plugin:
+                kind: PrometheusTimeSeriesQuery
+                spec:
+                  seriesNameFormat: "p99"
+                  query: histogram_quantile(0.99, rate(apiserver_delegated_authn_request_duration_seconds_bucket{instance=~".*:6969"}[5m]))
+      kubeRbacProxyAuthzLatency:
+        kind: Panel
+        spec:
+          display:
+            name: Authz Latency (p50/p99, seconds)
+          plugin:
+            kind: TimeSeriesChart
+            spec:
+              yAxis:
+                format:
+                  unit: decimal
+                  shortValues: true
+          queries:
+          - kind: TimeSeriesQuery
+            spec:
+              plugin:
+                kind: PrometheusTimeSeriesQuery
+                spec:
+                  seriesNameFormat: "p50"
+                  query: histogram_quantile(0.5, rate(apiserver_delegated_authz_request_duration_seconds_bucket{instance=~".*:6969"}[5m]))
+          - kind: TimeSeriesQuery
+            spec:
+              plugin:
+                kind: PrometheusTimeSeriesQuery
+                spec:
+                  seriesNameFormat: "p99"
+                  query: histogram_quantile(0.99, rate(apiserver_delegated_authz_request_duration_seconds_bucket{instance=~".*:6969"}[5m]))
+      kubeRbacProxyRestClientRequestRate:
+        kind: Panel
+        spec:
+          display:
+            name: REST Client Requests (/s)
+          plugin:
+            kind: TimeSeriesChart
+            spec:
+              yAxis:
+                format:
+                  unit: decimal
+                  shortValues: true
+          queries:
+          - kind: TimeSeriesQuery
+            spec:
+              plugin:
+                kind: PrometheusTimeSeriesQuery
+                spec:
+                  seriesNameFormat: "{{code}} {{method}}"
+                  query: rate(rest_client_requests_total{instance=~".*:6969"}[5m])
+      kubeRbacProxyRestClientRequestSize:
+        kind: Panel
+        spec:
+          display:
+            name: REST Client Request Size (p50/p99, bytes)
+          plugin:
+            kind: TimeSeriesChart
+            spec:
+              yAxis:
+                format:
+                  unit: decimal
+                  shortValues: true
+          queries:
+          - kind: TimeSeriesQuery
+            spec:
+              plugin:
+                kind: PrometheusTimeSeriesQuery
+                spec:
+                  seriesNameFormat: "req p50"
+                  query: histogram_quantile(0.5, rate(rest_client_request_size_bytes_bucket{instance=~".*:6969"}[5m]))
+          - kind: TimeSeriesQuery
+            spec:
+              plugin:
+                kind: PrometheusTimeSeriesQuery
+                spec:
+                  seriesNameFormat: "req p99"
+                  query: histogram_quantile(0.99, rate(rest_client_request_size_bytes_bucket{instance=~".*:6969"}[5m]))
+          - kind: TimeSeriesQuery
+            spec:
+              plugin:
+                kind: PrometheusTimeSeriesQuery
+                spec:
+                  seriesNameFormat: "resp p50"
+                  query: histogram_quantile(0.5, rate(rest_client_response_size_bytes_bucket{instance=~".*:6969"}[5m]))
+          - kind: TimeSeriesQuery
+            spec:
+              plugin:
+                kind: PrometheusTimeSeriesQuery
+                spec:
+                  seriesNameFormat: "resp p99"
+                  query: histogram_quantile(0.99, rate(rest_client_response_size_bytes_bucket{instance=~".*:6969"}[5m]))
+      kubeRbacProxyTransportCacheEntries:
+        kind: Panel
+        spec:
+          display:
+            name: Transport Cache Entries
+          plugin:
+            kind: TimeSeriesChart
+            spec:
+              yAxis:
+                format:
+                  unit: decimal
+                  shortValues: true
+          queries:
+          - kind: TimeSeriesQuery
+            spec:
+              plugin:
+                kind: PrometheusTimeSeriesQuery
+                spec:
+                  seriesNameFormat: "entries"
+                  query: rest_client_transport_cache_entries{instance=~".*:6969"}
+      kubeRbacProxyCAReloadRate:
+        kind: Panel
+        spec:
+          display:
+            name: Transport CA Reloads (/s)
+          plugin:
+            kind: TimeSeriesChart
+            spec:
+              yAxis:
+                format:
+                  unit: decimal
+                  shortValues: true
+          queries:
+          - kind: TimeSeriesQuery
+            spec:
+              plugin:
+                kind: PrometheusTimeSeriesQuery
+                spec:
+                  seriesNameFormat: "{{result}} {{reason}}"
+                  query: rate(rest_client_transport_ca_reload_total{instance=~".*:6969"}[5m])
+      kubeRbacProxyCPU:
+        kind: Panel
+        spec:
+          display:
+            name: CPU Usage (seconds/s)
+          plugin:
+            kind: TimeSeriesChart
+            spec:
+              yAxis:
+                format:
+                  unit: decimal
+                  shortValues: true
+          queries:
+          - kind: TimeSeriesQuery
+            spec:
+              plugin:
+                kind: PrometheusTimeSeriesQuery
+                spec:
+                  seriesNameFormat: "cpu"
+                  query: rate(process_cpu_seconds_total{instance=~".*:6969"}[5m])
+      kubeRbacProxyMemoryRSS:
+        kind: Panel
+        spec:
+          display:
+            name: Memory RSS (bytes)
+          plugin:
+            kind: TimeSeriesChart
+            spec:
+              yAxis:
+                format:
+                  unit: decimal
+                  shortValues: true
+          queries:
+          - kind: TimeSeriesQuery
+            spec:
+              plugin:
+                kind: PrometheusTimeSeriesQuery
+                spec:
+                  seriesNameFormat: "rss"
                   query: process_resident_memory_bytes{instance=~".*:6969"}
+          - kind: TimeSeriesQuery
+            spec:
+              plugin:
+                kind: PrometheusTimeSeriesQuery
+                spec:
+                  seriesNameFormat: "virtual"
+                  query: process_virtual_memory_bytes{instance=~".*:6969"}
+      kubeRbacProxyFDs:
+        kind: Panel
+        spec:
+          display:
+            name: File Descriptors
+          plugin:
+            kind: TimeSeriesChart
+            spec:
+              yAxis:
+                format:
+                  unit: decimal
+                  shortValues: true
+          queries:
+          - kind: TimeSeriesQuery
+            spec:
+              plugin:
+                kind: PrometheusTimeSeriesQuery
+                spec:
+                  seriesNameFormat: "open"
+                  query: process_open_fds{instance=~".*:6969"}
+          - kind: TimeSeriesQuery
+            spec:
+              plugin:
+                kind: PrometheusTimeSeriesQuery
+                spec:
+                  seriesNameFormat: "max"
+                  query: process_max_fds{instance=~".*:6969"}
+      kubeRbacProxyNetworkBytes:
+        kind: Panel
+        spec:
+          display:
+            name: Network Throughput (bytes/s)
+          plugin:
+            kind: TimeSeriesChart
+            spec:
+              yAxis:
+                format:
+                  unit: decimal
+                  shortValues: true
+          queries:
+          - kind: TimeSeriesQuery
+            spec:
+              plugin:
+                kind: PrometheusTimeSeriesQuery
+                spec:
+                  seriesNameFormat: "rx"
+                  query: rate(process_network_receive_bytes_total{instance=~".*:6969"}[5m])
+          - kind: TimeSeriesQuery
+            spec:
+              plugin:
+                kind: PrometheusTimeSeriesQuery
+                spec:
+                  seriesNameFormat: "tx"
+                  query: rate(process_network_transmit_bytes_total{instance=~".*:6969"}[5m])
       kubeRbacProxyGoroutines:
         kind: Panel
         spec:
@@ -204,8 +544,157 @@ spec:
               plugin:
                 kind: PrometheusTimeSeriesQuery
                 spec:
-                  seriesNameFormat: "{{pod}}"
-                  query: go_goroutines{instance=~".*:6969"}
+                  seriesNameFormat: "total"
+                  query: go_sched_goroutines_goroutines{instance=~".*:6969"}
+          - kind: TimeSeriesQuery
+            spec:
+              plugin:
+                kind: PrometheusTimeSeriesQuery
+                spec:
+                  seriesNameFormat: "runnable"
+                  query: go_sched_goroutines_runnable_goroutines{instance=~".*:6969"}
+          - kind: TimeSeriesQuery
+            spec:
+              plugin:
+                kind: PrometheusTimeSeriesQuery
+                spec:
+                  seriesNameFormat: "waiting"
+                  query: go_sched_goroutines_waiting_goroutines{instance=~".*:6969"}
+      kubeRbacProxyHeap:
+        kind: Panel
+        spec:
+          display:
+            name: Heap (bytes)
+          plugin:
+            kind: TimeSeriesChart
+            spec:
+              yAxis:
+                format:
+                  unit: decimal
+                  shortValues: true
+          queries:
+          - kind: TimeSeriesQuery
+            spec:
+              plugin:
+                kind: PrometheusTimeSeriesQuery
+                spec:
+                  seriesNameFormat: "live"
+                  query: go_gc_heap_live_bytes{instance=~".*:6969"}
+          - kind: TimeSeriesQuery
+            spec:
+              plugin:
+                kind: PrometheusTimeSeriesQuery
+                spec:
+                  seriesNameFormat: "goal"
+                  query: go_gc_heap_goal_bytes{instance=~".*:6969"}
+          - kind: TimeSeriesQuery
+            spec:
+              plugin:
+                kind: PrometheusTimeSeriesQuery
+                spec:
+                  seriesNameFormat: "objects"
+                  query: go_gc_heap_objects_objects{instance=~".*:6969"}
+      kubeRbacProxyGCPauseLatency:
+        kind: Panel
+        spec:
+          display:
+            name: GC Pause Latency (p50/p99, seconds)
+          plugin:
+            kind: TimeSeriesChart
+            spec:
+              yAxis:
+                format:
+                  unit: decimal
+                  shortValues: true
+          queries:
+          - kind: TimeSeriesQuery
+            spec:
+              plugin:
+                kind: PrometheusTimeSeriesQuery
+                spec:
+                  seriesNameFormat: "p50"
+                  query: histogram_quantile(0.5, rate(go_gc_pauses_seconds_bucket{instance=~".*:6969"}[5m]))
+          - kind: TimeSeriesQuery
+            spec:
+              plugin:
+                kind: PrometheusTimeSeriesQuery
+                spec:
+                  seriesNameFormat: "p99"
+                  query: histogram_quantile(0.99, rate(go_gc_pauses_seconds_bucket{instance=~".*:6969"}[5m]))
+      kubeRbacProxyGCCycleRate:
+        kind: Panel
+        spec:
+          display:
+            name: GC Cycles (/s)
+          plugin:
+            kind: TimeSeriesChart
+            spec:
+              yAxis:
+                format:
+                  unit: decimal
+                  shortValues: true
+          queries:
+          - kind: TimeSeriesQuery
+            spec:
+              plugin:
+                kind: PrometheusTimeSeriesQuery
+                spec:
+                  seriesNameFormat: "automatic"
+                  query: rate(go_gc_cycles_automatic_gc_cycles_total{instance=~".*:6969"}[5m])
+          - kind: TimeSeriesQuery
+            spec:
+              plugin:
+                kind: PrometheusTimeSeriesQuery
+                spec:
+                  seriesNameFormat: "forced"
+                  query: rate(go_gc_cycles_forced_gc_cycles_total{instance=~".*:6969"}[5m])
+      kubeRbacProxyMutexWait:
+        kind: Panel
+        spec:
+          display:
+            name: Mutex Wait (seconds/s)
+          plugin:
+            kind: TimeSeriesChart
+            spec:
+              yAxis:
+                format:
+                  unit: decimal
+                  shortValues: true
+          queries:
+          - kind: TimeSeriesQuery
+            spec:
+              plugin:
+                kind: PrometheusTimeSeriesQuery
+                spec:
+                  seriesNameFormat: "mutex wait"
+                  query: rate(go_sync_mutex_wait_total_seconds_total{instance=~".*:6969"}[5m])
+      kubeRbacProxySchedLatency:
+        kind: Panel
+        spec:
+          display:
+            name: Scheduler Runnable Latency (p50/p99, seconds)
+          plugin:
+            kind: TimeSeriesChart
+            spec:
+              yAxis:
+                format:
+                  unit: decimal
+                  shortValues: true
+          queries:
+          - kind: TimeSeriesQuery
+            spec:
+              plugin:
+                kind: PrometheusTimeSeriesQuery
+                spec:
+                  seriesNameFormat: "p50"
+                  query: histogram_quantile(0.5, rate(go_sched_latencies_seconds_bucket{instance=~".*:6969"}[5m]))
+          - kind: TimeSeriesQuery
+            spec:
+              plugin:
+                kind: PrometheusTimeSeriesQuery
+                spec:
+                  seriesNameFormat: "p99"
+                  query: histogram_quantile(0.99, rate(go_sched_latencies_seconds_bucket{instance=~".*:6969"}[5m]))
       receiverAcceptedRate:
         kind: Panel
         spec:
@@ -311,25 +800,133 @@ spec:
           width: 12
           height: 6
           content:
-            $ref: '#/spec/panels/kubeRbacProxyNetworkReceive'
+            $ref: '#/spec/panels/kubeRbacProxyRateLimiterWait'
         - x: 12
           y: 0
           width: 12
           height: 6
           content:
-            $ref: '#/spec/panels/kubeRbacProxyNetworkTransmit'
+            $ref: '#/spec/panels/kubeRbacProxyAPIServerLatency'
         - x: 0
           y: 6
           width: 12
           height: 6
           content:
-            $ref: '#/spec/panels/kubeRbacProxyMemory'
+            $ref: '#/spec/panels/kubeRbacProxyAuthnRate'
         - x: 12
           y: 6
           width: 12
           height: 6
           content:
+            $ref: '#/spec/panels/kubeRbacProxyAuthzRate'
+        - x: 0
+          y: 12
+          width: 12
+          height: 6
+          content:
+            $ref: '#/spec/panels/kubeRbacProxyTokenCacheHitRate'
+        - x: 12
+          y: 12
+          width: 12
+          height: 6
+          content:
+            $ref: '#/spec/panels/kubeRbacProxyTokenCacheBlocked'
+        - x: 0
+          y: 18
+          width: 12
+          height: 6
+          content:
+            $ref: '#/spec/panels/kubeRbacProxyAuthnLatency'
+        - x: 12
+          y: 18
+          width: 12
+          height: 6
+          content:
+            $ref: '#/spec/panels/kubeRbacProxyAuthzLatency'
+        - x: 0
+          y: 24
+          width: 12
+          height: 6
+          content:
+            $ref: '#/spec/panels/kubeRbacProxyRestClientRequestRate'
+        - x: 12
+          y: 24
+          width: 12
+          height: 6
+          content:
+            $ref: '#/spec/panels/kubeRbacProxyRestClientRequestSize'
+        - x: 0
+          y: 30
+          width: 12
+          height: 6
+          content:
+            $ref: '#/spec/panels/kubeRbacProxyTransportCacheEntries'
+        - x: 12
+          y: 30
+          width: 12
+          height: 6
+          content:
+            $ref: '#/spec/panels/kubeRbacProxyCAReloadRate'
+        - x: 0
+          y: 36
+          width: 12
+          height: 6
+          content:
+            $ref: '#/spec/panels/kubeRbacProxyCPU'
+        - x: 12
+          y: 36
+          width: 12
+          height: 6
+          content:
+            $ref: '#/spec/panels/kubeRbacProxyMemoryRSS'
+        - x: 0
+          y: 42
+          width: 12
+          height: 6
+          content:
+            $ref: '#/spec/panels/kubeRbacProxyFDs'
+        - x: 12
+          y: 42
+          width: 12
+          height: 6
+          content:
+            $ref: '#/spec/panels/kubeRbacProxyNetworkBytes'
+        - x: 0
+          y: 48
+          width: 12
+          height: 6
+          content:
             $ref: '#/spec/panels/kubeRbacProxyGoroutines'
+        - x: 12
+          y: 48
+          width: 12
+          height: 6
+          content:
+            $ref: '#/spec/panels/kubeRbacProxyHeap'
+        - x: 0
+          y: 54
+          width: 12
+          height: 6
+          content:
+            $ref: '#/spec/panels/kubeRbacProxyGCPauseLatency'
+        - x: 12
+          y: 54
+          width: 12
+          height: 6
+          content:
+            $ref: '#/spec/panels/kubeRbacProxyGCCycleRate'
+        - x: 0
+          y: 60
+          width: 12
+          height: 6
+          content:
+            $ref: '#/spec/panels/kubeRbacProxyMutexWait'
+        - x: 12
+          y: 60
+          width: 12
+          height: 6
+          content:
+            $ref: '#/spec/panels/kubeRbacProxySchedLatency'
     - kind: Grid
       spec:
         display:
