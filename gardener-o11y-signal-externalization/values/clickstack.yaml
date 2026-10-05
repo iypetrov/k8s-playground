@@ -49,6 +49,15 @@ global:
                 cert_file: /etc/otel/tls/tls.crt
                 key_file: /etc/otel/tls/tls.key
                 client_ca_file: /etc/otel/tls/ca.crt
+              auth:
+                authenticator: bearertokenauth/hyperdx
+      service:
+        extensions: [health_check, bearertokenauth/hyperdx]
+        pipelines:
+          metrics/hyperdx:
+            receivers: [otlp/hyperdx]
+            processors: [memory_limiter, batch]
+            exporters: [clickhouse]
 
 hyperdx:
   # Ports shared across Deployment, Service, ConfigMap, and Ingress
