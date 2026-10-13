@@ -46,11 +46,11 @@ spec:
                       resourceRef:
                         name: hyperdx-otelcol-tls
                         dataKey: client.key
-              signals: [metrics]
-              filters:
-                error_mode: ignore
-                metric_conditions:
-                  - metric.name == "vali_ingester_chunk_utilization"
+              signals: [events]
+              # filters:
+              #   error_mode: propagate
+              #   metric_conditions:
+              #     - metric.name == "process_open_fds"
               # filters:
               #   error_mode: propagate
               #   log_conditions:

@@ -31,5 +31,5 @@ make -C /home/iypetrov/projects/personal/k8s-playground/gardener-o11y-signal-ext
 
 ```bash
 # clean-up the gardener setup
-make -C /home/iypetrov/projects/oss/gardener-gardener kind-down
+sudo make -C /home/iypetrov/projects/oss/gardener-gardener kind-down
 ```
