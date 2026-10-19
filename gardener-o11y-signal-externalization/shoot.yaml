@@ -21,6 +21,8 @@ spec:
             level: normal
           targets:
             - exporter:
+                debug:
+                  verbosity: detailed
                 otlp_http:
                   # The Envoy LoadBalancer IP is the only address reachable from
                   # the seed AND allow-listed by the shoot's allow-machine-pods
