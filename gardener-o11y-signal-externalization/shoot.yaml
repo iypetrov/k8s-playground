@@ -48,7 +48,8 @@ spec:
                       resourceRef:
                         name: hyperdx-otelcol-tls
                         dataKey: client.key
-              signals: [metrics,logs,events]
+              signals: [metrics]
+              verbosity: basic
               # filters:
               #   error_mode: propagate
               #   metric_conditions:
