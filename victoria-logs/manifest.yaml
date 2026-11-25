@@ -1,0 +1,110 @@
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: victoria
+---
+apiVersion: storage.k8s.io/v1
+kind: StorageClass
+metadata:
+  name: vlsingle-local-path
+provisioner: rancher.io/local-path
+reclaimPolicy: Delete
+volumeBindingMode: WaitForFirstConsumer
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: vlsingle
+  namespace: victoria
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: vlsingle
+  namespace: victoria
+spec:
+  storageClassName: vlsingle-local-path
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 2Gi
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: vlsingle
+  namespace: victoria
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: vlsingle
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      labels:
+        app: vlsingle
+    spec:
+      serviceAccountName: vlsingle
+      containers:
+        - name: vlsingle
+          image: victoriametrics/victoria-logs:v1.53.0
+          args:
+            - -httpListenAddr=:9428
+            - -retentionPeriod=7d
+            - -storageDataPath=/victoria-logs-data
+          ports:
+            - containerPort: 9428
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 9428
+            periodSeconds: 5
+            failureThreshold: 10
+          resources:
+            requests:
+              cpu: 150m
+              memory: 500Mi
+            limits:
+              cpu: 1200m
+              memory: 1500Mi
+          volumeMounts:
+            - name: data
+              mountPath: /victoria-logs-data
+        - name: seed-logs
+          image: curlimages/curl:latest
+          command:
+            - sh
+            - -c
+            - |
+              until curl -sf http://localhost:9428/health; do echo "waiting..."; sleep 2; done
+              curl -s -X POST http://localhost:9428/insert/elasticsearch/_bulk \
+                -H "Content-Type: application/json" \
+                --data-binary '{"create":{}}
+              {"_msg":"hello from example log","_time":"2026-11-25T13:00:00Z","host":"test-host","level":"info","service":"demo"}
+              {"create":{}}
+              {"_msg":"another example log entry","_time":"2026-11-25T13:00:01Z","host":"test-host","level":"warn","service":"demo"}
+              {"create":{}}
+              {"_msg":"error occurred in service","_time":"2026-11-25T13:00:02Z","host":"test-host","level":"error","service":"demo"}
+              '
+              echo "done"
+              sleep infinity
+      volumes:
+        - name: data
+          persistentVolumeClaim:
+            claimName: vlsingle
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: vlsingle
+  namespace: victoria
+spec:
+  selector:
+    app: vlsingle
+  ports:
+    - port: 9428
+      targetPort: 9428
