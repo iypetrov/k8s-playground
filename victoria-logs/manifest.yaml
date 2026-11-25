@@ -74,7 +74,7 @@ spec:
           volumeMounts:
             - name: data
               mountPath: /victoria-logs-data
-        - name: seed-logs
+        - name: ingestion
           image: curlimages/curl:latest
           command:
             - sh
