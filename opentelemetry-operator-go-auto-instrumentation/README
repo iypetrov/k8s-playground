@@ -1,0 +1,13 @@
+The KinD cluster is created from the opentelemetry-operator source:
+```bash
+# Run the operator locally
+# make run runs the manager outside the cluster, so webhooks are not active.
+# For webhook behavior you need make deploy (in-cluster, requires cert-manager via make cert-manager) or e2e tests.
+make start-kind install cert-manager prepare-e2e run
+# To enable Go auto-instrumentation
+kubectl patch deployment opentelemetry-operator-controller-manager \
+    -n opentelemetry-operator-system \
+    --type=json \
+    -p='[{"op":"add","path":"/spec/template/spec/containers/0/args/-","value":"--enable-go-instrumentation=true"}]'
+kubectl rollout restart -n opentelemetry-operator-system deployment/opentelemetry-operator-controller-manager
+```
