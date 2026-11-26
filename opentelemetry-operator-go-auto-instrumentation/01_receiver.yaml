@@ -10,8 +10,20 @@ metadata:
   name: auto-instrumentation-receiver
   namespace: receiver
 spec:
-  mode: deployment
+  image: jaegertracing/jaeger:latest
+  ports:
+  - name: jaeger-ui
+    port: 16686
   config:
+    extensions:
+      jaeger_storage:
+        backends:
+          memstore:
+            memory:
+              max_traces: 100000
+      jaeger_query:
+        storage:
+          traces: memstore
     receivers:
       otlp:
         protocols:
@@ -19,28 +31,12 @@ spec:
             endpoint: 0.0.0.0:4317
           http:
             endpoint: 0.0.0.0:4318
-    processors:
-      memory_limiter:
-        check_interval: 1s
-        limit_percentage: 75
-        spike_limit_percentage: 15
     exporters:
-      debug:
-        verbosity: detailed
+      jaeger_storage_exporter:
+        trace_storage: memstore
     service:
-      telemetry:
-        logs:
-          level: debug
+      extensions: [jaeger_storage, jaeger_query]
       pipelines:
         traces:
           receivers: [otlp]
-          processors: [memory_limiter]
-          exporters: [debug]
-        metrics:
-          receivers: [otlp]
-          processors: [memory_limiter]
-          exporters: [debug]
-        logs:
-          receivers: [otlp]
-          processors: [memory_limiter]
-          exporters: [debug]
+          exporters: [jaeger_storage_exporter]

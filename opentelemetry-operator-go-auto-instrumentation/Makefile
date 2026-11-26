@@ -20,6 +20,10 @@ apply: ## Apply all manifests.
 	@kubectl apply -f 02_http-server.yaml
 	@kubectl apply -f 03_batch-job.yaml
 
+.PHONY: jaeger-ui
+jaeger-ui: ## Port-forward Jaeger UI to http://localhost:16686.
+	@kubectl port-forward -n receiver svc/auto-instrumentation-receiver-collector 16686:16686
+
 .PHONY: curl-http-server
 curl-http-server: ## Curl the http-server /healthz endpoint.
 	@kubectl run curl --image=curlimages/curl --restart=Never --rm -it -n http-server -- \
