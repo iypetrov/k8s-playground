@@ -28,6 +28,9 @@ spec:
       debug:
         verbosity: detailed
     service:
+      telemetry:
+        logs:
+          level: debug
       pipelines:
         traces:
           receivers: [otlp]

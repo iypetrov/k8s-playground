@@ -2,32 +2,26 @@ package main
 
 import (
 	"log"
+	"net/http"
 	"time"
 )
+
+const prometheusURL = "https://prometheus.demo.prometheus.io/api/v1/metadata"
 
 func main() {
 	log.Println("batch-job starting")
 
-	log.Println("batch-job processing batch")
-	log.Println("1/10 batches are processed")
-	time.Sleep(1 * time.Second)
-	log.Println("2/10 batches are processed")
-	time.Sleep(1 * time.Second)
-	log.Println("3/10 batches are processed")
-	time.Sleep(1 * time.Second)
-	log.Println("4/10 batches are processed")
-	time.Sleep(1 * time.Second)
-	log.Println("5/10 batches are processed")
-	time.Sleep(1 * time.Second)
-	log.Println("6/10 batches are processed")
-	time.Sleep(1 * time.Second)
-	log.Println("7/10 batches are processed")
-	time.Sleep(1 * time.Second)
-	log.Println("8/10 batches are processed")
-	time.Sleep(1 * time.Second)
-	log.Println("9/10 batches are processed")
-	time.Sleep(1 * time.Second)
-	log.Println("10/10 batches are processed")
+	for i := 1; i <= 10; i++ {
+		log.Printf("%d/10 batches are processed", i)
+
+		resp, err := http.Get(prometheusURL)
+		if err != nil {
+			log.Printf("request failed: %v", err)
+		} else {
+			resp.Body.Close()
+		}
+		time.Sleep(2 * time.Second)
+	}
+
 	log.Println("batch-job batch done")
-	time.Sleep(2 * time.Second)
 }
