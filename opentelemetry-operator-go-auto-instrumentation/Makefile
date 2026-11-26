@@ -18,3 +18,8 @@ kind-load: ## Build and load both images into the kind cluster.
 apply: ## Apply all manifests.
 	@kubectl apply -f 01_receiver.yaml
 	@kubectl apply -f 02_http-server.yaml
+
+.PHONY: curl-http-server
+curl-http-server: ## Curl the http-server /healthz endpoint.
+	@kubectl run curl --image=curlimages/curl --restart=Never --rm -it -n http-server -- \
+		curl -s http://http-server:8080/healthz
